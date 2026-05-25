@@ -249,7 +249,7 @@ select.inp { cursor:pointer; }
         <i class="fas fa-cloud-upload-alt" style="font-size:40px;color:#7c3aed;margin-bottom:12px;"></i>
         <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:6px;">فایل‌ها را اینجا رها کنید</div>
         <div style="font-size:12px;color:#64748b;">یا کلیک کنید برای انتخاب</div>
-        <div style="font-size:11px;color:#475569;margin-top:8px;">MP4، WebM، MKV، AVI، MOV — حداکثر 500MB</div>
+        <div style="font-size:11px;color:#475569;margin-top:8px;">MP4، WebM، MKV، AVI، MOV — حداکثر ۵ گیگابایت &nbsp;|&nbsp; <span style="color:#a78bfa;">خودکار تبدیل به TS</span></div>
         <input type="file" id="fileInput" multiple accept="video/*" style="display:none;" onchange="handleFileSelect(this.files)">
       </div>
 

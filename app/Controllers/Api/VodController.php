@@ -154,6 +154,9 @@ class VodController extends Controller
     /** POST /api/v1/vod/upload */
     public function upload(Request $req): void
     {
+        // بدون محدودیت زمانی — برای تبدیل فایل‌های بزرگ
+        set_time_limit(0);
+
         $file = $_FILES['file'] ?? null;
         if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
             Response::error('فایل معتبر نیست: ' . ($file['error'] ?? 'no file'), 400);
@@ -162,30 +165,40 @@ class VodController extends Controller
         $allowedMimes = [
             'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
             'video/x-msvideo', 'video/x-matroska', 'video/mpeg',
-            'video/3gpp', 'video/x-flv',
+            'video/3gpp', 'video/x-flv', 'video/mp2t',
         ];
         $mime = mime_content_type($file['tmp_name']) ?: $file['type'];
         if (!in_array($mime, $allowedMimes, true)) {
             Response::error("نوع فایل مجاز نیست: $mime", 422);
         }
 
-        $maxSize = (int)(ini_get('upload_max_filesize') ?: 512) * 1024 * 1024;
+        // محدودیت ۵ گیگابایت
+        $maxSize = 5 * 1024 * 1024 * 1024;
         if ($file['size'] > $maxSize) {
-            Response::error('فایل بیش از حد مجاز است', 413);
+            Response::error('حجم فایل بیش از ۵ گیگابایت مجاز است', 413);
         }
 
         // آماده‌سازی مسیر
         $uploadDir = PUBLIC_PATH . '/uploads/vod/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-        $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) ?: 'mp4';
         $safeName = preg_replace('/[^a-z0-9_-]/i', '_', pathinfo($file['name'], PATHINFO_FILENAME));
         $safeName = substr($safeName, 0, 80);
-        $fileName = $safeName . '_' . uniqid() . '.' . $ext;
+        $uid      = uniqid();
+        $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) ?: 'mp4';
+        $fileName = $safeName . '_' . $uid . '.' . $ext;
         $destPath = $uploadDir . $fileName;
 
         if (!move_uploaded_file($file['tmp_name'], $destPath)) {
             Response::error('خطا در ذخیره فایل', 500);
+        }
+
+        // ── تبدیل به فرمت TS ──────────────────────────────
+        $tsResult = $this->convertToTs($destPath, $uploadDir, $safeName . '_' . $uid);
+        if ($tsResult) {
+            $fileName = $tsResult['file'];
+            $destPath = $tsResult['path'];
+            $mime     = 'video/mp2t';
         }
 
         // متادیتا با FFprobe
@@ -197,29 +210,29 @@ class VodController extends Controller
         $title = preg_replace('/[_\-]+/', ' ', $title);
 
         $id = $this->db->insert('vod_videos', [
-            'tenant_id'   => $this->tid,
-            'category_id' => $catId,
-            'title'       => $title,
-            'type'        => 'upload',
-            'file_path'   => '/uploads/vod/' . $fileName,
-            'file_name'   => $file['name'],
-            'file_size'   => $file['size'],
-            'mime_type'   => $mime,
-            'thumbnail'   => $thumbUrl,
+            'tenant_id'      => $this->tid,
+            'category_id'    => $catId,
+            'title'          => $title,
+            'type'           => 'upload',
+            'file_path'      => '/uploads/vod/' . $fileName,
+            'file_name'      => $file['name'],
+            'file_size'      => filesize($destPath) ?: $file['size'],
+            'mime_type'      => $mime,
+            'thumbnail'      => $thumbUrl,
             'thumbnail_auto' => $thumbUrl ? 1 : 0,
-            'duration'    => $meta['duration'] ?? null,
-            'duration_fmt'=> isset($meta['duration']) ? $this->formatDuration((int)$meta['duration']) : null,
-            'width'       => $meta['width'] ?? null,
-            'height'      => $meta['height'] ?? null,
-            'codec'       => $meta['codec'] ?? null,
-            'bitrate'     => $meta['bitrate'] ?? null,
-            'status'      => 'ready',
-            'uploaded_by' => Auth::id() ?? null,
+            'duration'       => $meta['duration'] ?? null,
+            'duration_fmt'   => isset($meta['duration']) ? $this->formatDuration((int)$meta['duration']) : null,
+            'width'          => $meta['width'] ?? null,
+            'height'         => $meta['height'] ?? null,
+            'codec'          => $meta['codec'] ?? null,
+            'bitrate'        => $meta['bitrate'] ?? null,
+            'status'         => 'ready',
+            'uploaded_by'    => Auth::id() ?? null,
         ]);
 
         $video = $this->db->row("SELECT * FROM vod_videos WHERE id=?", [$id]);
         $this->log('vod.upload', 'VodVideo', (int)$id);
-        Response::success($video, 'ویدیو آپلود شد', 201);
+        Response::success($video, 'ویدیو آپلود و تبدیل به TS شد', 201);
     }
 
     /** POST /api/v1/vod/videos — اضافه کردن URL */
@@ -353,6 +366,48 @@ class VodController extends Controller
     // ══════════════════════════════════════════════════════
     // HELPERS
     // ══════════════════════════════════════════════════════
+
+    /**
+     * تبدیل ویدیو به فرمت MPEG-TS
+     * ابتدا با stream copy (سریع)، در صورت شکست با re-encode (سازگارتر)
+     */
+    private function convertToTs(string $srcPath, string $uploadDir, string $baseName): ?array
+    {
+        if (!function_exists('shell_exec')) return null;
+
+        $tsFile = $baseName . '.ts';
+        $tsPath = $uploadDir . $tsFile;
+
+        // روش اول: copy بدون re-encode (خیلی سریع)
+        $cmd = sprintf(
+            'ffmpeg -y -i %s -c copy -f mpegts %s 2>/dev/null',
+            escapeshellarg($srcPath),
+            escapeshellarg($tsPath)
+        );
+        @shell_exec($cmd);
+
+        if (file_exists($tsPath) && filesize($tsPath) > 1024) {
+            @unlink($srcPath);  // حذف فایل اصلی
+            return ['file' => $tsFile, 'path' => $tsPath];
+        }
+
+        // روش دوم: re-encode با H.264/AAC (سازگار با همه codec ها)
+        $cmd = sprintf(
+            'ffmpeg -y -i %s -c:v libx264 -preset fast -crf 22 -c:a aac -b:a 128k -f mpegts %s 2>/dev/null',
+            escapeshellarg($srcPath),
+            escapeshellarg($tsPath)
+        );
+        @shell_exec($cmd);
+
+        if (file_exists($tsPath) && filesize($tsPath) > 1024) {
+            @unlink($srcPath);
+            return ['file' => $tsFile, 'path' => $tsPath];
+        }
+
+        // تبدیل ناموفق — فایل اصلی حفظ می‌شه
+        if (file_exists($tsPath)) @unlink($tsPath);
+        return null;
+    }
 
     private function probeVideo(string $path): array
     {
