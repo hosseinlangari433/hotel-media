@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>SignageCMS — ویدیو معرفی ۶۰ ثانیه</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:1080px;overflow:hidden;background:#0a0a0f;font-family:'Vazirmatn',sans-serif;cursor:none}
+
+/* ── SCENE ENGINE ── */
+.scene{position:absolute;inset:0;opacity:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.scene.active{pointer-events:auto}
+
+/* ── GLOBAL BG GRADIENT PULSE ── */
+.bg-pulse{position:fixed;inset:0;background:radial-gradient(ellipse 120% 80% at 50% 120%,rgba(249,115,22,.07) 0%,transparent 60%);animation:bgPulse 4s ease-in-out infinite alternate;z-index:0}
+@keyframes bgPulse{from{opacity:.5}to{opacity:1}}
+
+/* ── GRID LINES ── */
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:80px 80px;z-index:0}
+
+/* ── NOISE ── */
+.noise{position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");opacity:.4;z-index:0;pointer-events:none}
+
+/* ── CARD / WINDOW ── */
+.win{background:#111118;border:1px solid rgba(255,255,255,.09);border-radius:20px;overflow:hidden;position:relative;box-shadow:0 40px 120px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.05)}
+.win-bar{background:#16161f;padding:12px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.win-dot{width:12px;height:12px;border-radius:50%}
+
+/* ── SIDEBAR MOCK ── */
+.sidebar-mock{width:220px;background:#0d0d15;border-left:1px solid rgba(255,255,255,.06);height:100%;flex-shrink:0;padding:16px 0}
+.s-logo{padding:12px 20px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:12px}
+.s-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:12px;color:#64748b;margin:2px 8px;border-radius:8px}
+.s-item.active{background:rgba(249,115,22,.12);color:#f97316}
+.s-item i{width:14px;text-align:center}
+
+/* ── STAT CARD ── */
+.stat{background:#16161f;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;flex:1}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-green{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+.badge-red{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.badge-orange{background:rgba(249,115,22,.15);color:#f97316;border:1px solid rgba(249,115,22,.25)}
+.badge-blue{background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.25)}
+
+/* ── PILL FEATURE TAG ── */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:30px;font-size:13px;color:#94a3b8}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes scaleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.05)}}
+@keyframes countUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes scanline{from{transform:translateY(-100%)}to{transform:translateY(100vh)}}
+@keyframes typewriter{from{width:0}to{width:100%}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 30px rgba(249,115,22,.3)}50%{box-shadow:0 0 60px rgba(249,115,22,.6),0 0 100px rgba(249,115,22,.2)}}
+@keyframes progressBar{from{width:0}to{width:var(--w)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.gradient-text{background:linear-gradient(135deg,#f97316 0%,#fb923c 40%,#fbbf24 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.gradient-text-blue{background:linear-gradient(135deg,#6366f1 0%,#818cf8 50%,#06b6d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ── PROGRESS BAR ── */
+.vid-progress{position:fixed;bottom:0;left:0;width:0%;height:4px;background:linear-gradient(90deg,#f97316,#fb923c);z-index:9999;transition:width .1s linear}
+
+/* ── SCENE TIMING (60 seconds total) ── */
+/* s1: 0-5s intro */
+#s1{animation:sceneShow1 5s forwards}
+@keyframes sceneShow1{0%{opacity:0}8%{opacity:1}80%{opacity:1}100%{opacity:0}}
+
+/* s2: 4-12s dashboard */
+#s2{animation:sceneShow2 9s 4s forwards}
+@keyframes sceneShow2{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* s3: 12-20s screens */
+#s3{animation:sceneShow3 9s 12s forwards}
+@keyframes sceneShow3{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* s4: 20-29s playlist */
+#s4{animation:sceneShow4 10s 20s forwards}
+@keyframes sceneShow4{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* s5: 29-38s IPTV/TVH */
+#s5{animation:sceneShow5 10s 29s forwards}
+@keyframes sceneShow5{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* s6: 38-46s FIDS */
+#s6{animation:sceneShow6 9s 38s forwards}
+@keyframes sceneShow6{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* s7: 46-54s Players */
+#s7{animation:sceneShow7 9s 46s forwards}
+@keyframes sceneShow7{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* s8: 54-60s CTA */
+#s8{animation:sceneShow8 7s 54s forwards}
+@keyframes sceneShow8{0%{opacity:0}10%{opacity:1}85%{opacity:1}100%{opacity:1}}
+
+/* ── SCREEN PREVIEW BOX ── */
+.screen-box{background:#000;border-radius:10px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative}
+.screen-online::after{content:'● LIVE';position:absolute;top:8px;right:8px;font-size:9px;color:#22c55e;font-weight:700;animation:pulse 1.5s infinite}
+
+/* ── TABLE ROW ── */
+.trow{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#94a3b8}
+.trow:hover,.trow.hl{background:rgba(249,115,22,.05)}
+
+/* ── NOTIFICATION DOT ── */
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;animation:pulse 1s infinite}
+
+/* ── CHANNEL ROW ── */
+.ch-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.ch-logo{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="bg-pulse"></div>
+<div class="grid-bg"></div>
+<div class="noise"></div>
+
+<!-- Progress bar -->
+<div class="vid-progress" id="progress"></div>
+
+<!-- Scanline effect -->
+<div style="position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 1 — INTRO (0-5s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s1" style="flex-direction:column;gap:24px;z-index:10">
+  <!-- گلوری لایت -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(249,115,22,.25) 0%,transparent 70%);filter:blur(40px)"></div>
+
+  <!-- لوگو -->
+  <div style="animation:scaleIn .8s .2s both;position:relative">
+    <div style="width:96px;height:96px;background:linear-gradient(135deg,#f97316,#c2570b);border-radius:28px;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 20px 60px rgba(249,115,22,.4);animation:glow 2s ease-in-out infinite">
+      <i class="fas fa-tv" style="font-size:42px;color:#fff"></i>
+    </div>
+  </div>
+
+  <!-- عنوان -->
+  <div style="text-align:center;animation:fadeUp .8s .5s both">
+    <div style="font-size:72px;font-weight:900;letter-spacing:-2px" class="gradient-text">SignageCMS</div>
+    <div style="font-size:24px;color:#64748b;margin-top:8px;letter-spacing:.5px">سیستم مدیریت تابلو دیجیتال حرفه‌ای</div>
+  </div>
+
+  <!-- تگ‌ها -->
+  <div style="display:flex;gap:12px;animation:fadeUp .8s .9s both;flex-wrap:wrap;justify-content:center">
+    <span class="pill"><i class="fas fa-tv" style="color:#f97316"></i> Multi-Screen</span>
+    <span class="pill"><i class="fas fa-satellite-dish" style="color:#ef4444"></i> Live TV</span>
+    <span class="pill"><i class="fas fa-plane" style="color:#06b6d4"></i> FIDS</span>
+    <span class="pill"><i class="fab fa-android" style="color:#22c55e"></i> Android TV</span>
+    <span class="pill"><i class="fab fa-windows" style="color:#818cf8"></i> Windows</span>
+    <span class="pill"><i class="fas fa-docker" style="color:#0ea5e9"></i> Docker</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 2 — DASHBOARD (4-12s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s2" style="padding:60px;z-index:9">
+  <div style="width:100%;max-width:1600px;display:flex;gap:40px;align-items:flex-start">
+
+    <!-- Left: label -->
+    <div style="flex:0 0 340px;animation:slideRight .7s .1s both">
+      <div style="font-size:13px;color:#f97316;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">
+        <i class="fas fa-gauge-high" style="margin-left:8px"></i>داشبورد مدیریتی
+      </div>
+      <div style="font-size:48px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px">
+        همه چیز را<br><span class="gradient-text">یکجا ببینید</span>
+      </div>
+      <div style="font-size:15px;color:#64748b;line-height:1.8;margin-bottom:28px">
+        وضعیت real-time تمام صفحه‌نمایش‌ها، آمار پخش، آخرین heartbeat و هشدارها در یک نگاه
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8">
+          <i class="fas fa-check-circle" style="color:#22c55e"></i> وضعیت online/offline هر صفحه
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8">
+          <i class="fas fa-check-circle" style="color:#22c55e"></i> آمار پخش رسانه‌ها
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8">
+          <i class="fas fa-check-circle" style="color:#22c55e"></i> هشدارهای اضطراری
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Dashboard screenshot -->
+    <div style="flex:1;animation:slideLeft .7s .2s both">
+      <div class="win" style="height:580px;display:flex">
+        <!-- Sidebar -->
+        <div class="sidebar-mock">
+          <div class="s-logo">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#f97316,#c2570b);border-radius:10px;display:flex;align-items:center;justify-content:center">
+              <i class="fas fa-tv" style="color:#fff;font-size:14px"></i>
+            </div>
+            <span style="font-weight:800;color:#fff;font-size:14px">SignageCMS</span>
+          </div>
+          <div class="s-item active"><i class="fas fa-gauge-high" style="color:#f97316"></i>داشبورد</div>
+          <div class="s-item"><i class="fas fa-tv" style="color:#94a3b8"></i>صفحه‌نمایش</div>
+          <div class="s-item"><i class="fas fa-list" style="color:#94a3b8"></i>پلی‌لیست</div>
+          <div class="s-item"><i class="fas fa-photo-film" style="color:#94a3b8"></i>رسانه‌ها</div>
+          <div class="s-item"><i class="fas fa-satellite-dish" style="color:#f87171"></i>IPTV</div>
+          <div class="s-item"><i class="fas fa-broadcast-tower" style="color:#f87171"></i>TVHeadend</div>
+          <div class="s-item"><i class="fas fa-plane" style="color:#06b6d4"></i>FIDS</div>
+          <div class="s-item"><i class="fas fa-film" style="color:#ec4899"></i>VOD</div>
+        </div>
+        <!-- Main -->
+        <div style="flex:1;padding:20px;overflow:hidden">
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+            <?php
+            $stats=[['۱۲۴','صفحه‌نمایش','fa-tv','#f97316'],['۹۸','آنلاین','fa-circle-dot','#22c55e'],['۳۴','پلی‌لیست','fa-list','#a855f7'],['۲.۴ TB','رسانه','fa-hard-drive','#06b6d4']];
+            ?>
+            <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-top:3px solid #f97316;border-radius:12px;padding:14px">
+              <div style="font-size:28px;font-weight:900;color:#fff;animation:countUp .6s .4s both">۱۲۴</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px">صفحه‌نمایش</div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-top:3px solid #22c55e;border-radius:12px;padding:14px">
+              <div style="font-size:28px;font-weight:900;color:#22c55e;animation:countUp .6s .5s both">۹۸</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px">آنلاین <i class="fas fa-circle-dot" style="font-size:8px;animation:pulse 1s infinite"></i></div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-top:3px solid #a855f7;border-radius:12px;padding:14px">
+              <div style="font-size:28px;font-weight:900;color:#fff;animation:countUp .6s .6s both">۳۴</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px">پلی‌لیست</div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-top:3px solid #06b6d4;border-radius:12px;padding:14px">
+              <div style="font-size:28px;font-weight:900;color:#fff;animation:countUp .6s .7s both">۲.۴ TB</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px">رسانه‌ها</div>
+            </div>
+          </div>
+          <!-- Screen list -->
+          <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden">
+            <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;font-weight:700;color:#fff;display:flex;justify-content:space-between;align-items:center">
+              <span>صفحه‌نمایش‌های فعال</span>
+              <span class="badge badge-green"><i class="fas fa-circle" style="font-size:7px;animation:pulse 1s infinite"></i> ۹۸ آنلاین</span>
+            </div>
+            <div class="trow hl">
+              <div class="screen-box" style="width:60px;height:36px;background:linear-gradient(135deg,#1a1a2e,#16213e)">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#f97316">▶ پخش زنده</div>
+              </div>
+              <div style="flex:1"><div style="color:#fff;font-weight:600">لابی اصلی — ورودی</div><div style="font-size:10px;color:#475569">192.168.1.101</div></div>
+              <span class="badge badge-green">آنلاین</span>
+              <div style="font-size:11px;color:#475569">۲ دقیقه پیش</div>
+            </div>
+            <div class="trow">
+              <div class="screen-box" style="width:60px;height:36px;background:linear-gradient(135deg,#0d1b2a,#1b263b)">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#06b6d4">✈ FIDS</div>
+              </div>
+              <div style="flex:1"><div style="color:#fff;font-weight:600">تابلوی پروازی — سالن D</div><div style="font-size:10px;color:#475569">192.168.1.102</div></div>
+              <span class="badge badge-green">آنلاین</span>
+              <div style="font-size:11px;color:#475569">۱ دقیقه پیش</div>
+            </div>
+            <div class="trow">
+              <div class="screen-box" style="width:60px;height:36px;background:linear-gradient(135deg,#1a0a0a,#2d1515)">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#ef4444">● TV</div>
+              </div>
+              <div style="flex:1"><div style="color:#fff;font-weight:600">اتاق انتظار VIP</div><div style="font-size:10px;color:#475569">192.168.1.205</div></div>
+              <span class="badge badge-red">آفلاین</span>
+              <div style="font-size:11px;color:#ef4444">۴۵ دقیقه پیش</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 3 — SCREEN MANAGEMENT (12-20s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s3" style="padding:60px;z-index:8">
+  <div style="width:100%;max-width:1600px;display:flex;gap:40px;align-items:flex-start">
+
+    <!-- Windows mock -->
+    <div style="flex:1;animation:scaleIn .6s .1s both">
+      <div class="win" style="height:580px;display:flex">
+        <div class="sidebar-mock" style="width:200px">
+          <div class="s-logo">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#f97316,#c2570b);border-radius:8px;display:flex;align-items:center;justify-content:center">
+              <i class="fas fa-tv" style="color:#fff;font-size:12px"></i>
+            </div>
+            <span style="font-weight:800;color:#fff;font-size:13px">SignageCMS</span>
+          </div>
+          <div class="s-item"><i class="fas fa-gauge-high" style="color:#64748b"></i>داشبورد</div>
+          <div class="s-item active"><i class="fas fa-tv" style="color:#f97316"></i>صفحه‌نمایش</div>
+          <div class="s-item"><i class="fas fa-list" style="color:#64748b"></i>پلی‌لیست</div>
+          <div class="s-item"><i class="fas fa-photo-film" style="color:#64748b"></i>رسانه‌ها</div>
+        </div>
+        <div style="flex:1;padding:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:16px;font-weight:800;color:#fff"><i class="fas fa-tv" style="color:#f97316;margin-left:8px"></i>مدیریت صفحه‌نمایش</div>
+            <div style="background:linear-gradient(135deg,#f97316,#c2570b);padding:7px 14px;border-radius:10px;font-size:12px;color:#fff;font-weight:600">+ صفحه جدید</div>
+          </div>
+          <!-- Screen grid -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <?php
+            $screens=[
+              ['لابی اصلی','#f97316','آنلاین','badge-green','▶ پخش'],
+              ['سالن D','#06b6d4','آنلاین','badge-green','✈ FIDS'],
+              ['اتاق VIP','#a855f7','آنلاین','badge-green','◼ تصویر'],
+              ['رستوران','#22c55e','آنلاین','badge-green','▶ منو'],
+              ['پذیرش','#f59e0b','آفلاین','badge-red','—'],
+              ['پارکینگ','#ef4444','آنلاین','badge-green','▶ تبلیغ'],
+            ];
+            ?>
+            <div style="background:#16161f;border:1px solid rgba(249,115,22,.3);border-radius:12px;overflow:hidden">
+              <div style="height:70px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center;font-size:11px;color:#f97316;font-weight:600;position:relative">
+                ▶ پخش زنده
+                <div style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 1s infinite"></div>
+              </div>
+              <div style="padding:10px 12px">
+                <div style="font-size:12px;font-weight:700;color:#fff">لابی اصلی</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+                  <span class="badge badge-green" style="font-size:10px">آنلاین</span>
+                  <span style="font-size:10px;color:#475569">192.168.1.101</span>
+                </div>
+              </div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(6,182,212,.2);border-radius:12px;overflow:hidden">
+              <div style="height:70px;background:linear-gradient(135deg,#0d1b2a,#1b263b);display:flex;align-items:center;justify-content:center;font-size:11px;color:#06b6d4;font-weight:600">✈ FIDS</div>
+              <div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;color:#fff">سالن D</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><span class="badge badge-green" style="font-size:10px">آنلاین</span><span style="font-size:10px;color:#475569">192.168.1.102</span></div></div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(168,85,247,.2);border-radius:12px;overflow:hidden">
+              <div style="height:70px;background:linear-gradient(135deg,#1a0d2e,#2d1b4e);display:flex;align-items:center;justify-content:center;font-size:11px;color:#a855f7;font-weight:600">◼ تصویر</div>
+              <div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;color:#fff">اتاق VIP</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><span class="badge badge-green" style="font-size:10px">آنلاین</span><span style="font-size:10px;color:#475569">192.168.1.103</span></div></div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(34,197,94,.2);border-radius:12px;overflow:hidden">
+              <div style="height:70px;background:linear-gradient(135deg,#0d1a0d,#1a3a1a);display:flex;align-items:center;justify-content:center;font-size:11px;color:#22c55e;font-weight:600">▶ منو</div>
+              <div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;color:#fff">رستوران</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><span class="badge badge-green" style="font-size:10px">آنلاین</span><span style="font-size:10px;color:#475569">192.168.1.104</span></div></div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden">
+              <div style="height:70px;background:#0f0f17;display:flex;align-items:center;justify-content:center;font-size:11px;color:#475569;font-weight:600">—</div>
+              <div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;color:#94a3b8">پذیرش</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><span class="badge badge-red" style="font-size:10px">آفلاین</span><span style="font-size:10px;color:#475569">192.168.1.105</span></div></div>
+            </div>
+            <div style="background:#16161f;border:1px solid rgba(239,68,68,.15);border-radius:12px;overflow:hidden">
+              <div style="height:70px;background:linear-gradient(135deg,#1a0a0a,#2d1515);display:flex;align-items:center;justify-content:center;font-size:11px;color:#ef4444;font-weight:600">▶ تبلیغ</div>
+              <div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;color:#fff">پارکینگ</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><span class="badge badge-green" style="font-size:10px">آنلاین</span><span style="font-size:10px;color:#475569">192.168.1.106</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Label -->
+    <div style="flex:0 0 320px;animation:slideLeft .7s .2s both">
+      <div style="font-size:13px;color:#f97316;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">
+        <i class="fas fa-tv" style="margin-left:8px"></i>Multi-Screen
+      </div>
+      <div style="font-size:44px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px">
+        نامحدود<br><span class="gradient-text">صفحه‌نمایش</span>
+      </div>
+      <div style="font-size:15px;color:#64748b;line-height:1.8;margin-bottom:24px">
+        مدیریت همزمان صدها صفحه‌نمایش در مکان‌های مختلف با monitoring real-time
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e"></i>Pairing با کد یکتا بدون تنظیمات</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e"></i>پروفایل‌های Android TV، LG، Samsung</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e"></i>گروه‌بندی و دستورات همزمان</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e"></i>Emergency Broadcast فوری</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 4 — PLAYLIST (20-29s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s4" style="padding:60px;z-index:7">
+  <div style="width:100%;max-width:1600px;display:flex;gap:40px;align-items:flex-start">
+
+    <div style="flex:0 0 320px;animation:slideRight .7s .1s both">
+      <div style="font-size:13px;color:#a855f7;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">
+        <i class="fas fa-list" style="margin-left:8px"></i>Playlist Designer
+      </div>
+      <div style="font-size:44px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px">
+        <span style="background:linear-gradient(135deg,#a855f7,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Drag & Drop</span><br>پلی‌لیست
+      </div>
+      <div style="font-size:15px;color:#64748b;line-height:1.8;margin-bottom:24px">
+        ساخت پلی‌لیست‌های پیچیده با Layout چند‌ناحیه‌ای، زمان‌بندی هفتگی و transition
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#a855f7"></i>Layout Designer با ناحیه‌های قابل تنظیم</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#a855f7"></i>زمان‌بندی روزانه / هفتگی / همیشه</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#a855f7"></i>ویدیو، تصویر، HTML، IPTV، FIDS</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#a855f7"></i>Transition انیمیشن بین آیتم‌ها</div>
+      </div>
+    </div>
+
+    <div style="flex:1;animation:slideLeft .7s .2s both">
+      <div class="win" style="height:580px;display:flex">
+        <div class="sidebar-mock" style="width:190px">
+          <div class="s-logo">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#f97316,#c2570b);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-tv" style="color:#fff;font-size:12px"></i></div>
+            <span style="font-weight:800;color:#fff;font-size:13px">SignageCMS</span>
+          </div>
+          <div class="s-item"><i class="fas fa-gauge-high" style="color:#64748b"></i>داشبورد</div>
+          <div class="s-item"><i class="fas fa-tv" style="color:#64748b"></i>صفحه‌نمایش</div>
+          <div class="s-item active"><i class="fas fa-list" style="color:#a855f7"></i>پلی‌لیست</div>
+          <div class="s-item"><i class="fas fa-photo-film" style="color:#64748b"></i>رسانه‌ها</div>
+        </div>
+        <div style="flex:1;padding:18px;overflow:hidden">
+          <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:16px"><i class="fas fa-list" style="color:#a855f7;margin-left:8px"></i>پلی‌لیست‌ها</div>
+          <!-- Layout preview -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <!-- Layout 1 -->
+            <div style="background:#16161f;border:1px solid rgba(168,85,247,.3);border-radius:12px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:10px">پلی‌لیست لابی</div>
+              <div style="background:#0f0f17;border-radius:8px;height:100px;position:relative;overflow:hidden;margin-bottom:10px">
+                <!-- Layout zones -->
+                <div style="position:absolute;top:0;left:0;right:30%;bottom:0;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#f97316">ویدیو اصلی</div>
+                <div style="position:absolute;top:0;right:70%;bottom:50%;left:0;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:4px;margin-right:calc(100% - 30%);display:flex;align-items:center;justify-content:center;font-size:8px;color:#22c55e;right:0;left:70%">FIDS</div>
+                <div style="position:absolute;bottom:0;right:0;left:70%;top:50%;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#818cf8">اخبار</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <span class="badge badge-orange" style="font-size:10px">۸ آیتم</span>
+                <span class="badge badge-blue" style="font-size:10px">۳ ناحیه</span>
+              </div>
+            </div>
+            <!-- Playlist items -->
+            <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:10px">آیتم‌های فعال</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:8px;background:#0f0f17;border-radius:8px;padding:7px 10px;border-right:3px solid #f97316">
+                  <i class="fas fa-video" style="color:#f97316;font-size:11px"></i>
+                  <span style="font-size:11px;color:#fff;flex:1">تبلیغ محصول جدید.mp4</span>
+                  <span style="font-size:10px;color:#475569">۳۰s</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:#0f0f17;border-radius:8px;padding:7px 10px;border-right:3px solid #a855f7">
+                  <i class="fas fa-image" style="color:#a855f7;font-size:11px"></i>
+                  <span style="font-size:11px;color:#fff;flex:1">بنر تخفیف تابستانه.jpg</span>
+                  <span style="font-size:10px;color:#475569">۱۵s</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:#0f0f17;border-radius:8px;padding:7px 10px;border-right:3px solid #06b6d4">
+                  <i class="fas fa-plane" style="color:#06b6d4;font-size:11px"></i>
+                  <span style="font-size:11px;color:#fff;flex:1">اطلاعات پرواز FIDS</span>
+                  <span style="font-size:10px;color:#475569">همیشه</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:#0f0f17;border-radius:8px;padding:7px 10px;border-right:3px solid #ef4444">
+                  <i class="fas fa-satellite-dish" style="color:#ef4444;font-size:11px"></i>
+                  <span style="font-size:11px;color:#fff;flex:1">کانال خبری — IPTV</span>
+                  <span style="font-size:10px;color:#475569">۶۰s</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Schedule -->
+          <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px">زمان‌بندی هفتگی</div>
+            <div style="display:flex;gap:6px">
+              <?php foreach(['ش','ی','د','س','چ','پ','ج'] as $i=>$d): ?>
+              <div style="flex:1;height:32px;border-radius:6px;background:<?=$i<5?'rgba(168,85,247,.2)':'rgba(255,255,255,.03)'?>;display:flex;align-items:center;justify-content:center;font-size:10px;color:<?=$i<5?'#a855f7':'#475569'?>;border:1px solid <?=$i<5?'rgba(168,85,247,.3)':'rgba(255,255,255,.06)'?>"><?=$d?></div>
+              <?php endforeach; ?>
+            </div>
+            <div style="font-size:10px;color:#475569;margin-top:6px;text-align:center">شنبه تا چهارشنبه · ۰۸:۰۰ — ۲۲:۰۰</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 5 — IPTV + TVHeadend (29-38s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s5" style="padding:60px;z-index:6">
+  <div style="width:100%;max-width:1600px;display:flex;gap:40px;align-items:flex-start">
+
+    <div style="flex:1;animation:scaleIn .6s .1s both">
+      <div class="win" style="height:580px;display:flex">
+        <div class="sidebar-mock" style="width:200px">
+          <div class="s-logo"><div style="width:28px;height:28px;background:linear-gradient(135deg,#f97316,#c2570b);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-tv" style="color:#fff;font-size:12px"></i></div><span style="font-weight:800;color:#fff;font-size:13px">SignageCMS</span></div>
+          <div class="s-item"><i class="fas fa-gauge-high" style="color:#64748b"></i>داشبورد</div>
+          <div class="s-item active"><i class="fas fa-satellite-dish" style="color:#ef4444"></i>کانال‌های IPTV</div>
+          <div class="s-item" style="color:#f87171"><i class="fas fa-broadcast-tower" style="color:#f87171"></i>TVHeadend</div>
+          <div class="s-item"><i class="fas fa-film" style="color:#64748b"></i>VOD</div>
+        </div>
+        <div style="flex:1;padding:18px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:800;color:#fff"><i class="fas fa-satellite-dish" style="color:#ef4444;margin-left:8px"></i>کانال‌های IPTV</div>
+            <div style="display:flex;gap:6px">
+              <span class="badge badge-red">۸۷ کانال</span>
+              <div style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);padding:5px 10px;border-radius:8px;font-size:11px;color:#22c55e;display:flex;align-items:center;gap:5px">
+                <i class="fas fa-broadcast-tower" style="font-size:9px"></i>TVHeadend متصل
+              </div>
+            </div>
+          </div>
+          <!-- TVH Status -->
+          <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;background:rgba(239,68,68,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="fas fa-server" style="color:#ef4444;font-size:16px"></i>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:#fff">TVHeadend Server — ۱۹۲.۱۶۸.۱.۵۰:۹۹۸۱</div>
+              <div style="font-size:10px;color:#64748b;margin-top:2px">آخرین سینک: ۵ دقیقه پیش · ۸۷ کانال</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#22c55e">
+              <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1s infinite;display:inline-block"></span>
+              متصل
+            </div>
+          </div>
+          <!-- Channel list -->
+          <div style="background:#16161f;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden">
+            <div class="ch-row">
+              <div class="ch-logo" style="background:rgba(239,68,68,.15);color:#ef4444">۱</div>
+              <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#fff">شبکه یک</div><div style="font-size:10px;color:#475569">HLS · livetv</div></div>
+              <div style="width:50px;height:30px;background:linear-gradient(135deg,#1a0a0a,#2d1515);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#ef4444">● LIVE</div>
+              <span class="badge badge-green" style="font-size:10px">فعال</span>
+            </div>
+            <div class="ch-row">
+              <div class="ch-logo" style="background:rgba(249,115,22,.15);color:#f97316">۲</div>
+              <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#fff">شبکه دو</div><div style="font-size:10px;color:#475569">HLS · livetv</div></div>
+              <div style="width:50px;height:30px;background:linear-gradient(135deg,#1a1000,#2d1e00);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#f97316">● LIVE</div>
+              <span class="badge badge-green" style="font-size:10px">فعال</span>
+            </div>
+            <div class="ch-row">
+              <div class="ch-logo" style="background:rgba(6,182,212,.15);color:#06b6d4">خ</div>
+              <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#fff">شبکه خبر</div><div style="font-size:10px;color:#475569">HLS · livetv</div></div>
+              <div style="width:50px;height:30px;background:linear-gradient(135deg,#001a1e,#002d33);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#06b6d4">● LIVE</div>
+              <span class="badge badge-green" style="font-size:10px">فعال</span>
+            </div>
+            <div class="ch-row" style="padding:10px 14px;color:#475569;font-size:11px;text-align:center">
+              + ۸۴ کانال دیگر
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:0 0 340px;animation:slideLeft .7s .2s both">
+      <div style="font-size:13px;color:#ef4444;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">
+        <i class="fas fa-broadcast-tower" style="margin-left:8px"></i>Live TV
+      </div>
+      <div style="font-size:44px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px">
+        پخش زنده با<br><span style="background:linear-gradient(135deg,#ef4444,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent">TVHeadend</span>
+      </div>
+      <div style="font-size:15px;color:#64748b;line-height:1.8;margin-bottom:24px">
+        اتصال مستقیم به سرور TVHeadend — کانال‌های DVB-T، DVB-S، IPTV و HDHomeRun را با یک کلیک وارد کنید
+      </div>
+      <!-- Steps -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:flex-start;gap:12px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.1);border-radius:12px;padding:12px">
+          <div style="width:24px;height:24px;background:#ef4444;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">۱</div>
+          <div style="font-size:12px;color:#94a3b8">آدرس سرور TVHeadend را وارد کنید</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.1);border-radius:12px;padding:12px">
+          <div style="width:24px;height:24px;background:#ef4444;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">۲</div>
+          <div style="font-size:12px;color:#94a3b8">تست اتصال — اتوماتیک تأیید</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:12px;padding:12px">
+          <div style="width:24px;height:24px;background:#22c55e;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">۳</div>
+          <div style="font-size:12px;color:#94a3b8">«سینک کانال‌ها» — همه کانال‌ها در IPTV</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 6 — FIDS (38-46s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s6" style="padding:60px;z-index:5">
+  <div style="width:100%;max-width:1600px;display:flex;gap:40px;align-items:center">
+
+    <div style="flex:0 0 320px;animation:slideRight .7s .1s both">
+      <div style="font-size:13px;color:#06b6d4;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">
+        <i class="fas fa-plane-departure" style="margin-left:8px"></i>ماژول FIDS
+      </div>
+      <div style="font-size:44px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:20px">
+        اطلاعات<br><span style="background:linear-gradient(135deg,#06b6d4,#0ea5e9);-webkit-background-clip:text;-webkit-text-fill-color:transparent">پروازی زنده</span>
+      </div>
+      <div style="font-size:15px;color:#64748b;line-height:1.8;margin-bottom:24px">
+        دریافت خودکار اطلاعات پرواز از fids.airport.ir با به‌روزرسانی هر ۵ دقیقه
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#06b6d4"></i>ورود، خروج و ترانزیت</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#06b6d4"></i>وضعیت: به موقع، تأخیر، لغو</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#06b6d4"></i>شماره گیت و باند فرودگاه</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#06b6d4"></i>پشتیبانی از پروکسی (سرور خارج ایران)</div>
+      </div>
+    </div>
+
+    <!-- FIDS Display Mock -->
+    <div style="flex:1;animation:slideLeft .7s .2s both">
+      <div class="win" style="height:560px;background:#050d1a;overflow:hidden">
+        <!-- TV Header -->
+        <div style="background:linear-gradient(90deg,#0a1628,#0d1f3c);padding:14px 20px;border-bottom:2px solid #0ea5e9;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:14px">
+            <i class="fas fa-plane" style="color:#0ea5e9;font-size:20px"></i>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:1px">اطلاعات پروازها</div>
+              <div style="font-size:11px;color:#64748b">فرودگاه بین‌المللی امام خمینی</div>
+            </div>
+          </div>
+          <div style="text-align:left;font-size:13px;color:#0ea5e9;font-family:monospace">
+            <div id="clock" style="font-size:24px;font-weight:700">--:--:--</div>
+            <div style="font-size:10px;color:#475569">به‌روزرسانی: لحظه‌ای</div>
+          </div>
+        </div>
+        <!-- Departure header -->
+        <div style="background:#0a1628;padding:8px 20px;display:grid;grid-template-columns:100px 120px 1fr 120px 100px 80px;gap:8px;font-size:10px;font-weight:700;color:#0ea5e9;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(14,165,233,.2)">
+          <div>شماره پرواز</div><div>ایرلاین</div><div>مقصد</div><div>زمان پرواز</div><div>گیت</div><div>وضعیت</div>
+        </div>
+        <!-- Flight rows -->
+        <?php
+        $flights=[
+          ['IR۷۱۵','ایران‌ایر','مشهد','۱۴:۳۰','B12','به‌موقع','#22c55e'],
+          ['W5۱۰۵','ماهان','دبی','۱۴:۴۵','A08','تأخیر','#f59e0b'],
+          ['EP۴۳۲','ایران‌ایرتور','استانبول','۱۵:۱۰','C04','به‌موقع','#22c55e'],
+          ['IR۸۲۳','ایران‌ایر','لندن','۱۵:۳۰','D16','به‌موقع','#22c55e'],
+          ['B9۷۱۵','ایران‌ایرتور','بارسلون','۱۵:۵۵','A11','لغو','#ef4444'],
+          ['W5۲۱۸','ماهان','بیروت','۱۶:۲۰','B09','به‌موقع','#22c55e'],
+          ['QR۴۸۱','قطرایرویز','دوحه','۱۶:۴۰','E02','به‌موقع','#22c55e'],
+        ];
+        ?>
+        <?php foreach($flights as $i=>$f):?>
+        <div style="display:grid;grid-template-columns:100px 120px 1fr 120px 100px 80px;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;background:<?=$i%2==0?'rgba(255,255,255,.01)':'transparent'?>;animation:fadeIn .5s <?=($i*.1)+.3?>s both">
+          <div style="color:#0ea5e9;font-family:monospace;font-weight:700"><?=$f[0]?></div>
+          <div style="color:#94a3b8"><?=$f[1]?></div>
+          <div style="color:#fff;font-weight:600"><?=$f[2]?></div>
+          <div style="color:#fff;font-family:monospace;font-size:14px;font-weight:700"><?=$f[4]=='لغو'?'<span style="color:#ef4444;text-decoration:line-through">'.$f[3].'</span>':$f[3]?></div>
+          <div style="color:#64748b;font-family:monospace"><?=$f[4]!='لغو'?$f[4]:'—'?></div>
+          <div><span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;background:<?=$f[6]?>22;color:<?=$f[6]?>;border:1px solid <?=$f[6]?>44"><?=$f[5]?></span></div>
+        </div>
+        <?php endforeach;?>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 7 — PLAYERS Android + Windows (46-54s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s7" style="z-index:4">
+  <div style="width:100%;max-width:1700px;padding:60px;display:flex;gap:30px;align-items:center">
+
+    <!-- Android -->
+    <div style="flex:1;animation:slideRight .7s .1s both">
+      <div style="text-align:center;margin-bottom:20px">
+        <i class="fab fa-android" style="font-size:36px;color:#22c55e"></i>
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:8px">Android Player</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px">Android TV / Tablet / Phone</div>
+      </div>
+      <!-- Phone mockup -->
+      <div style="background:#111118;border:3px solid rgba(34,197,94,.3);border-radius:24px;padding:10px;max-width:260px;margin:0 auto;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+        <div style="background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative">
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0a0a0f,#111118)"></div>
+          <div style="position:relative;text-align:center">
+            <div style="font-size:10px;color:#f97316;font-weight:700;margin-bottom:6px">SignageCMS Player</div>
+            <div style="font-size:8px;color:#64748b">در حال پخش: لابی اصلی</div>
+            <div style="width:40px;height:40px;background:rgba(249,115,22,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:8px auto;border:2px solid rgba(249,115,22,.4)">
+              <i class="fas fa-play" style="color:#f97316;font-size:14px"></i>
+            </div>
+          </div>
+        </div>
+        <div style="padding:8px 10px 4px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:10px;color:#22c55e"><i class="fas fa-circle" style="font-size:7px;animation:pulse 1s infinite"></i> آنلاین</span>
+          <span style="font-size:9px;color:#475569">Android 5.0+</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;max-width:260px;margin-right:auto;margin-left:auto">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e;font-size:11px"></i>OTA به‌روزرسانی خودکار</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e;font-size:11px"></i>Kiosk mode — صفحه‌کلید بسته</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#22c55e;font-size:11px"></i>اجرای خودکار بعد از روشن شدن</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div style="width:1px;height:400px;background:rgba(255,255,255,.07);flex-shrink:0"></div>
+
+    <!-- Windows -->
+    <div style="flex:1;animation:fadeIn .7s .3s both">
+      <div style="text-align:center;margin-bottom:20px">
+        <i class="fab fa-windows" style="font-size:36px;color:#818cf8"></i>
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:8px">Windows Player</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px">Windows 10/11 — Electron</div>
+      </div>
+      <!-- Windows mockup -->
+      <div style="background:#111118;border:3px solid rgba(129,140,248,.3);border-radius:16px;overflow:hidden;max-width:320px;margin:0 auto;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+        <div style="background:#1e1e2e;padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
+          <span style="font-size:11px;color:#64748b;margin-right:8px">SignageCMS Player</span>
+        </div>
+        <div style="aspect-ratio:16/9;background:linear-gradient(135deg,#0a0a0f,#111118);display:flex;align-items:center;justify-content:center;position:relative">
+          <div style="text-align:center">
+            <i class="fas fa-tv" style="font-size:32px;color:#818cf8;opacity:.5"></i>
+            <div style="font-size:10px;color:#818cf8;margin-top:8px">Fullscreen Mode</div>
+            <div style="font-size:8px;color:#475569;margin-top:2px">در حال اتصال به سرور...</div>
+          </div>
+          <div style="position:absolute;bottom:8px;right:8px;font-size:8px;color:#22c55e"><i class="fas fa-circle" style="animation:pulse 1s infinite"></i> Connected</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;max-width:320px;margin-right:auto;margin-left:auto">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#818cf8;font-size:11px"></i>نصب‌کننده یک‌کلیک EXE</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#818cf8;font-size:11px"></i>Tray icon — در پس‌زمینه</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#818cf8;font-size:11px"></i>اتصال مجدد خودکار</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div style="width:1px;height:400px;background:rgba(255,255,255,.07);flex-shrink:0"></div>
+
+    <!-- Docker -->
+    <div style="flex:1;animation:slideLeft .7s .2s both">
+      <div style="text-align:center;margin-bottom:20px">
+        <i class="fas fa-docker" style="font-size:36px;color:#0ea5e9"></i>
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:8px">Docker Server</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px">Windows / Linux</div>
+      </div>
+      <div style="background:#0a0a12;border:1px solid rgba(14,165,233,.2);border-radius:16px;padding:20px;max-width:320px;margin:0 auto;font-family:monospace">
+        <div style="font-size:11px;color:#475569;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-terminal" style="color:#0ea5e9"></i>terminal
+        </div>
+        <div style="font-size:12px;line-height:2;color:#a3e635">
+          <div><span style="color:#64748b">$</span> git clone github.com/...</div>
+          <div><span style="color:#64748b">$</span> cp .env.example .env</div>
+          <div><span style="color:#64748b">$</span> <span style="color:#0ea5e9">docker</span> compose up -d</div>
+          <div style="color:#22c55e;animation:pulse 2s infinite">✓ SignageCMS is running!</div>
+          <div style="color:#64748b;font-size:10px">→ http://localhost/admin</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;max-width:320px;margin-right:auto;margin-left:auto">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#0ea5e9;font-size:11px"></i>Nginx + PHP + MySQL + Redis</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#0ea5e9;font-size:11px"></i>WebSocket real-time</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:#94a3b8"><i class="fas fa-check-circle" style="color:#0ea5e9;font-size:11px"></i>FFmpeg داخلی</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCENE 8 — CTA (54-60s)
+════════════════════════════════════════════ -->
+<div class="scene" id="s8" style="flex-direction:column;gap:32px;z-index:3">
+  <!-- Glow -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(249,115,22,.2) 0%,transparent 70%);filter:blur(60px)"></div>
+
+  <div style="animation:scaleIn .8s .1s both;text-align:center;position:relative">
+    <div style="font-size:18px;color:#f97316;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">
+      ✦ متن‌باز · حرفه‌ای · آماده استقرار ✦
+    </div>
+    <div style="font-size:80px;font-weight:900;line-height:1" class="gradient-text">SignageCMS</div>
+    <div style="font-size:22px;color:#64748b;margin-top:12px">سیستم مدیریت تابلو دیجیتال</div>
+  </div>
+
+  <!-- Feature grid -->
+  <div style="display:flex;gap:16px;animation:fadeUp .8s .4s both;flex-wrap:wrap;justify-content:center">
+    <?php
+    $feats=[
+      ['fa-tv','#f97316','Multi-Screen'],
+      ['fa-list','#a855f7','Playlist'],
+      ['fa-broadcast-tower','#ef4444','TVHeadend'],
+      ['fa-plane','#06b6d4','FIDS'],
+      ['fa-film','#ec4899','VOD'],
+      ['fab fa-android','#22c55e','Android'],
+      ['fab fa-windows','#818cf8','Windows'],
+      ['fa-docker','#0ea5e9','Docker'],
+    ];
+    foreach($feats as $f):
+    ?>
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:10px">
+      <i class="<?=$f[0]?> fas" style="color:<?=$f[1]?>;font-size:18px"></i>
+      <span style="font-size:13px;color:#94a3b8;font-weight:600"><?=$f[2]?></span>
+    </div>
+    <?php endforeach;?>
+  </div>
+
+  <!-- GitHub link -->
+  <div style="animation:fadeUp .8s .7s both;text-align:center">
+    <div style="display:inline-flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:16px 32px">
+      <i class="fab fa-github" style="font-size:28px;color:#fff"></i>
+      <div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:2px">دانلود و مستندات</div>
+        <div style="font-size:16px;font-weight:700;color:#fff">github.com/kish210/hotel-media</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:#475569">آخرین نسخه: v1.5.2 — دانلود APK · EXE · ZIP</div>
+  </div>
+</div>
+
+<script>
+// ─── PROGRESS BAR ───────────────────────
+const DURATION = 60;
+const start = Date.now();
+const bar = document.getElementById('progress');
+function tick() {
+  const el = (Date.now() - start) / 1000;
+  bar.style.width = Math.min(el / DURATION * 100, 100) + '%';
+  if (el < DURATION + 0.5) requestAnimationFrame(tick);
+}
+tick();
+
+// ─── CLOCK (FIDS scene) ─────────────────
+function updateClock() {
+  const c = document.getElementById('clock');
+  if (c) {
+    const n = new Date();
+    c.textContent = n.toLocaleTimeString('fa-IR');
+  }
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+</body>
+</html>
