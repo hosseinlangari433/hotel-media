@@ -47,8 +47,6 @@ jobs:
 
       - name: Build EXE
         working-directory: windows-player
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build
 
       - name: Rename installer

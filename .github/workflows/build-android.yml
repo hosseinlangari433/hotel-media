@@ -24,6 +24,12 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Download Gradle Wrapper JAR
+        working-directory: android/gradle/wrapper
+        run: |
+          curl -fsSL -o gradle-wrapper.jar \
+            "https://github.com/gradle/gradle/raw/v8.0.0/gradle/wrapper/gradle-wrapper.jar"
+
       - name: Grant execute permission to gradlew
         working-directory: android
         run: chmod +x gradlew
