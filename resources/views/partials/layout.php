@@ -1,5 +1,5 @@
 <?php
-use App\Core\Auth;
+use App\Core\{Auth, Lang};
 use App\Modules\Core\ModuleRegistry;
 
 if (!Auth::check() && !str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/player')) {
@@ -11,8 +11,13 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $flash       = $_SESSION['_flash'] ?? [];
 unset($_SESSION['_flash']);
 
+// ── زبان ──────────────────────────────────────────────────────────────────────
+$_uiLang   = Lang::current();
+$_uiDir    = Lang::dir();
+$_uiFont   = Lang::font();
+$_langList = Lang::all();
+
 // ── بارگذاری ماژول‌های فعال ─────────────────────────────────────────────────
-// از GLOBALS استفاده می‌کنیم چون layout داخل متد include میشه
 $GLOBALS['_activeModules'] = [];
 try {
     ModuleRegistry::ensureTable();
@@ -20,23 +25,32 @@ try {
     $GLOBALS['_activeModules'] = ModuleRegistry::activeIds();
 } catch (\Throwable $e) {}
 
-function isActive(string $path): string {
-    global $currentPath;
-    return str_starts_with($currentPath, $path) ? 'active' : '';
+if (!function_exists('isActive')) {
+    function isActive(string $path): string {
+        global $currentPath;
+        return str_starts_with($currentPath, $path) ? 'active' : '';
+    }
 }
-function modOn(string $id): bool {
-    return in_array($id, $GLOBALS['_activeModules'] ?? [], true);
+if (!function_exists('modOn')) {
+    function modOn(string $id): bool {
+        return in_array($id, $GLOBALS['_activeModules'] ?? [], true);
+    }
 }
 ?>
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" class="dark">
+<html lang="<?= $_uiLang ?>" dir="<?= $_uiDir ?>" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="<?= csrf_token() ?>">
-<title><?= e($title ?? 'SignageCMS') ?> — سیستم مدیریت تابلو دیجیتال</title>
+<title><?= e($title ?? 'SignageCMS') ?> — SignageCMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --ui-font: '<?= $_uiFont ?>', sans-serif; }
+body { font-family: var(--ui-font) !important; }
+.sidebar-nav, .card, .btn-primary, .btn-ghost, .form-input, .form-label, button, select, input, textarea { font-family: var(--ui-font) !important; }
+</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -55,14 +69,20 @@ function modOn(string $id): bool {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   * { box-sizing: border-box; }
-  body { font-family: 'Vazirmatn', sans-serif; background: #0a0a0f; color: #e2e8f0; direction: rtl; }
+  body { font-family: 'Vazirmatn', sans-serif; background: #0a0a0f; color: #e2e8f0; direction: <?= $_uiDir ?>; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: #111118; }
   ::-webkit-scrollbar-thumb { background: #2d2d40; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #f97316; }
 
+  /* LTR/RTL layout switch */
+  <?php if ($_uiDir === 'ltr'): ?>
+  .sidebar { width:240px; background:#111118; border-right:1px solid rgba(255,255,255,0.06); height:100vh; position:fixed; left:0; top:0; overflow-y:auto; z-index:40; }
+  .main { margin-left:240px; min-height:100vh; display:flex; flex-direction:column; }
+  <?php else: ?>
   .sidebar { width:240px; background:#111118; border-left:1px solid rgba(255,255,255,0.06); height:100vh; position:fixed; right:0; top:0; overflow-y:auto; z-index:40; }
   .main { margin-right:240px; min-height:100vh; display:flex; flex-direction:column; }
+  <?php endif; ?>
   .topbar { background:#111118; border-bottom:1px solid rgba(255,255,255,0.06); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:30; }
 
   .sidebar-link { display:flex; align-items:center; gap:10px; padding:9px 16px; color:#94a3b8; font-size:13.5px; font-weight:500; border-radius:10px; margin:2px 8px; text-decoration:none; transition:all 0.2s; }
@@ -131,31 +151,35 @@ function modOn(string $id): bool {
   </div>
 
   <!-- ── اصلی ── -->
-  <div class="sidebar-section">اصلی</div>
+  <div class="sidebar-section"><?= __('nav.section.main') ?></div>
   <a href="/admin/dashboard" class="sidebar-link <?= isActive('/admin/dashboard') ?>">
-    <span class="icon"><i class="fas fa-gauge"></i></span> داشبورد
+    <span class="icon"><i class="fas fa-gauge"></i></span> <?= __('nav.dashboard') ?>
   </a>
 
   <!-- ── محتوا ── -->
-  <div class="sidebar-section">محتوا</div>
-  <a href="/admin/screens"   class="sidebar-link <?= isActive('/admin/screens') ?>">
-    <span class="icon"><i class="fas fa-tv"></i></span> صفحات نمایش
+  <div class="sidebar-section"><?= __('nav.section.content') ?></div>
+  <a href="/admin/screens"   class="sidebar-link <?= isActive('/admin/screens') && !isActive('/admin/screens/monitor') ? 'active' : '' ?>">
+    <span class="icon"><i class="fas fa-tv"></i></span> <?= __('nav.screens') ?>
   </a>
   <a href="/admin/playlists" class="sidebar-link <?= isActive('/admin/playlists') ?>">
-    <span class="icon"><i class="fas fa-list"></i></span> پلی‌لیست
+    <span class="icon"><i class="fas fa-list"></i></span> <?= __('nav.playlists') ?>
   </a>
   <a href="/admin/media"     class="sidebar-link <?= isActive('/admin/media') ?>">
-    <span class="icon"><i class="fas fa-photo-film"></i></span> رسانه‌ها
+    <span class="icon"><i class="fas fa-photo-film"></i></span> <?= __('nav.media') ?>
   </a>
   <a href="/admin/layouts"   class="sidebar-link <?= isActive('/admin/layouts') ?>">
-    <span class="icon"><i class="fas fa-table-cells-large"></i></span> چیدمان
+    <span class="icon"><i class="fas fa-table-cells-large"></i></span> <?= __('nav.layouts') ?>
   </a>
   <a href="/admin/schedules" class="sidebar-link <?= isActive('/admin/schedules') ?>">
-    <span class="icon"><i class="fas fa-calendar"></i></span> زمان‌بندی
+    <span class="icon"><i class="fas fa-calendar"></i></span> <?= __('nav.schedules') ?>
+  </a>
+  <a href="/admin/messages" class="sidebar-link <?= isActive('/admin/messages') ?>">
+    <span class="icon"><i class="fas fa-message" style="color:#a78bfa;"></i></span>
+    <?= __('nav.messages') ?>
   </a>
 
   <!-- ── ماژول‌ها ── -->
-  <div class="sidebar-section">ماژول‌ها</div>
+  <div class="sidebar-section"><?= __('nav.modules') ?></div>
 
   <!-- مدیریت ماژول‌ها — همیشه نمایش داده می‌شود -->
   <a href="/admin/modules" class="sidebar-link <?= isActive('/admin/modules') ?>">
@@ -249,7 +273,7 @@ function modOn(string $id): bool {
   <?php endif; ?>
 
   <!-- ── ابزارها ── -->
-  <div class="sidebar-section">ابزارها</div>
+  <div class="sidebar-section"><?= __('nav.section.tools') ?></div>
   <a href="/admin/screens/monitor" class="sidebar-link <?= isActive('/admin/screens/monitor') ?>">
     <span class="icon"><i class="fas fa-display" style="color:#4ade80;"></i></span> مانیتورینگ
   </a>
@@ -261,7 +285,7 @@ function modOn(string $id): bool {
   </a>
 
   <!-- ── مدیریت ── -->
-  <div class="sidebar-section">مدیریت</div>
+  <div class="sidebar-section"><?= __('nav.section.admin') ?></div>
   <a href="/admin/campaigns" class="sidebar-link <?= isActive('/admin/campaigns') ?>">
     <span class="icon"><i class="fas fa-bullhorn"></i></span> کمپین‌ها
   </a>
@@ -286,13 +310,13 @@ function modOn(string $id): bool {
 <div class="main">
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:12px;">
-    <span style="font-size:15px;font-weight:700;color:#fff;"><?= e($title ?? 'داشبورد') ?></span>
+    <span style="font-size:15px;font-weight:700;color:#fff;"><?= e($title ?? __('nav.dashboard')) ?></span>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <!-- WS indicator -->
     <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 10px;">
       <span id="ws-indicator" style="width:8px;height:8px;border-radius:50%;background:#f87171;display:inline-block;"></span>
-      <span id="ws-status" style="font-size:11px;color:#64748b;">قطع</span>
+      <span id="ws-status" style="font-size:11px;color:#64748b;">—</span>
     </div>
 
     <!-- Flash messages -->
@@ -305,16 +329,43 @@ function modOn(string $id): bool {
     <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- ── Language switcher ─────────────────────────── -->
+    <div style="position:relative;" id="lang-menu-wrap">
+      <button onclick="document.getElementById('lang-dropdown').style.display = document.getElementById('lang-dropdown').style.display==='block'?'none':'block'"
+              style="display:flex;align-items:center;gap:6px;padding:5px 12px;
+                     background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+                     border-radius:8px;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+        <?= $_langList[$_uiLang]['flag'] ?? '🌐' ?>
+        <span><?= $_langList[$_uiLang]['label'] ?? '' ?></span>
+        <i class="fas fa-chevron-down" style="font-size:9px;"></i>
+      </button>
+      <div id="lang-dropdown"
+           style="display:none;position:absolute;top:calc(100% + 6px);right:0;
+                  background:#111118;border:1px solid rgba(255,255,255,.1);border-radius:12px;
+                  padding:6px;min-width:130px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5);">
+        <?php foreach ($_langList as $code => $info): ?>
+        <a href="/lang/<?= $code ?>"
+           style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+                  text-decoration:none;font-size:13px;
+                  <?= $code === $_uiLang ? 'background:rgba(249,115,22,.12);color:#f97316;font-weight:700;' : 'color:#94a3b8;' ?>
+                  ">
+          <?= $info['flag'] ?> <?= $info['label'] ?>
+          <?php if ($code === $_uiLang): ?><i class="fas fa-check text-xs" style="margin-<?= $_uiDir==='rtl'?'right':'left'?>:auto;color:#f97316;"></i><?php endif; ?>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
     <!-- User menu -->
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="width:32px;height:32px;background:linear-gradient(135deg,#f97316,#c2570b);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">
         <?= mb_substr($authUser['name'] ?? 'A', 0, 1) ?>
       </div>
       <div style="font-size:12px;">
-        <div style="color:#fff;font-weight:600;"><?= e($authUser['name'] ?? 'مدیر') ?></div>
+        <div style="color:#fff;font-weight:600;"><?= e($authUser['name'] ?? 'Admin') ?></div>
         <div style="color:#475569;"><?= e($authUser['role'] ?? '') ?></div>
       </div>
-      <a href="/logout" style="margin-right:6px;color:#475569;font-size:13px;text-decoration:none;" title="خروج">
+      <a href="/logout" style="margin-<?= $_uiDir==='rtl'?'right':'left'?>:6px;color:#475569;font-size:13px;text-decoration:none;" title="Logout / خروج">
         <i class="fas fa-right-from-bracket"></i>
       </a>
     </div>
@@ -323,3 +374,13 @@ function modOn(string $id): bool {
 
 <!-- Main content -->
 <main style="flex:1;padding:24px;max-width:1600px;width:100%;">
+<script>
+// ── بستن dropdown زبان با کلیک خارج ──────────────────────────────────
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('lang-menu-wrap');
+  const dd   = document.getElementById('lang-dropdown');
+  if (wrap && dd && !wrap.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+});
+</script>

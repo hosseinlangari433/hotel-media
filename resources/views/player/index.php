@@ -143,6 +143,58 @@ body { background:#000; color:#fff; font-family:sans-serif; overflow:hidden; wid
   position:absolute; inset:0; background:#000;
   display:none; flex-direction:column; align-items:center; justify-content:center; z-index:50;
 }
+
+/* ─── Message overlay ─── */
+#msg-overlay {
+  position:fixed; inset:0; z-index:88888; pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center;
+  padding:40px;
+}
+.msg-popup {
+  background:var(--msg-bg,#1a1a2e);
+  border:2px solid var(--msg-accent,#f97316);
+  border-radius:20px;
+  padding:28px 36px;
+  max-width:600px;
+  width:100%;
+  text-align:center;
+  pointer-events:auto;
+  animation:msgSlideIn .5s cubic-bezier(.34,1.56,.64,1) forwards;
+  box-shadow:0 20px 60px rgba(0,0,0,.8), 0 0 40px var(--msg-accent,#f97316)22;
+}
+.msg-popup.style-fullscreen {
+  position:fixed; inset:0; border-radius:0; max-width:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border:none; border-top:4px solid var(--msg-accent,#f97316);
+}
+.msg-popup.style-popup {
+  max-width:400px; padding:20px 24px;
+}
+.msg-popup.style-banner {
+  border-radius:0; border:none;
+  border-top:3px solid var(--msg-accent,#f97316);
+  padding:16px 32px;
+}
+.msg-icon { font-size:56px; margin-bottom:16px; animation:msgIconBounce .6s ease .3s both; }
+.msg-title { font-size:28px; font-weight:800; color:var(--msg-color,#fff); margin-bottom:12px; line-height:1.3; }
+.msg-body  { font-size:18px; color:var(--msg-color,#fff); opacity:.85; line-height:1.6; }
+.msg-accent-line { height:3px; background:var(--msg-accent,#f97316); border-radius:2px; margin:16px auto; width:60px; }
+.msg-dismiss { margin-top:20px; padding:8px 20px; background:var(--msg-accent,#f97316); border:none;
+               border-radius:30px; color:#000; font-size:13px; font-weight:700;
+               cursor:pointer; font-family:sans-serif; opacity:.8; }
+@keyframes msgSlideIn {
+  from { opacity:0; transform:translateY(30px) scale(.95); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes msgSlideOut {
+  from { opacity:1; transform:translateY(0) scale(1); }
+  to   { opacity:0; transform:translateY(20px) scale(.95); }
+}
+@keyframes msgIconBounce {
+  from { transform:scale(0) rotate(-10deg); }
+  70%  { transform:scale(1.2) rotate(5deg); }
+  to   { transform:scale(1) rotate(0deg); }
+}
 </style>
 </head>
 <body data-screen-code="<?= e($screen['code'] ?? '') ?>">
@@ -216,6 +268,9 @@ body { background:#000; color:#fff; font-family:sans-serif; overflow:hidden; wid
   <div id="instant-overlay">
     <div id="instant-content" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
   </div>
+
+  <!-- ─── Message Overlay ─── -->
+  <div id="msg-overlay"></div>
 
 </div><!-- /player-wrap -->
 
@@ -626,6 +681,106 @@ const InstantPlayer = {
   }
 };
 
+// ─── Message overlay ──────────────────────────────────────────────────────
+const MsgPlayer = {
+  queue:    [],
+  showing:  null,
+  shownIds: new Set(),
+  timer:    null,
+
+  // تعیین زبان نمایش پیام
+  _pickText(msg, field) {
+    const lang = navigator.language?.slice(0,2) || 'fa';
+    if (lang === 'en' && msg[field+'_en']) return msg[field+'_en'];
+    if (lang === 'ar' && msg[field+'_ar']) return msg[field+'_ar'];
+    return msg[field] || '';
+  },
+
+  enqueue(msgs) {
+    if (!msgs?.length) return;
+    msgs.forEach(m => {
+      if (!this.shownIds.has(m.id)) {
+        this.queue.push(m);
+        this.shownIds.add(m.id);
+      }
+    });
+    if (!this.showing) this.showNext();
+  },
+
+  showNext() {
+    if (!this.queue.length) { this.showing = null; return; }
+    const msg = this.queue.shift();
+    this.showing = msg;
+    this.render(msg);
+  },
+
+  render(msg) {
+    const overlay = document.getElementById('msg-overlay');
+    if (!overlay) return;
+
+    const style  = msg.style || 'overlay';
+    const title  = this._pickText(msg, 'title');
+    const body   = this._pickText(msg, 'body');
+    const icon   = msg.icon || this._defaultIcon(msg.type);
+    const bg     = msg.bg_color    || '#1a1a2e';
+    const color  = msg.text_color  || '#ffffff';
+    const accent = msg.accent_color|| '#f97316';
+    const dur    = (parseInt(msg.duration) || 15) * 1000;
+
+    // تنظیم جهت متن
+    const dir = /[؀-ۿ]/.test(title + body) ? 'rtl' : 'ltr';
+
+    let posStyle = '';
+    if (style === 'fullscreen') {
+      posStyle = 'position:fixed;inset:0;padding:0;justify-content:center;align-items:center;';
+    } else if (style === 'banner') {
+      posStyle = 'position:fixed;bottom:0;left:0;right:0;padding:0;align-items:flex-end;';
+    } else if (style === 'popup') {
+      posStyle = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);padding:0;width:auto;';
+    } else {
+      posStyle = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);width:min(640px,90vw);padding:0;';
+    }
+
+    overlay.innerHTML = `
+      <div class="msg-popup style-${style}"
+           style="--msg-bg:${bg};--msg-color:${color};--msg-accent:${accent};direction:${dir};${posStyle.includes('position')?'':''}">
+        ${style !== 'banner' ? `<div class="msg-icon">${icon}</div>` : ''}
+        ${title ? `<div class="msg-title">${this._esc(title)}</div>` : ''}
+        ${style !== 'banner' ? '<div class="msg-accent-line"></div>' : ''}
+        ${body  ? `<div class="msg-body">${this._esc(body)}</div>`   : ''}
+        <button class="msg-dismiss" onclick="MsgPlayer.dismiss()">✕</button>
+      </div>`;
+
+    // مخفی کردن پس از مدت زمان
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.dismiss(), dur);
+  },
+
+  dismiss() {
+    clearTimeout(this.timer);
+    const overlay = document.getElementById('msg-overlay');
+    const popup   = overlay?.querySelector('.msg-popup');
+    if (popup) {
+      popup.style.animation = 'msgSlideOut .4s ease forwards';
+      setTimeout(() => {
+        overlay.innerHTML = '';
+        this.showing = null;
+        // نمایش پیام بعدی (با تأخیر کوتاه)
+        setTimeout(() => this.showNext(), 2000);
+      }, 400);
+    } else {
+      overlay.innerHTML = '';
+      this.showing = null;
+    }
+  },
+
+  _defaultIcon(type) {
+    const icons = { welcome:'🤝', congratulation:'🎉', announcement:'📢', warning:'⚠️', info:'ℹ️' };
+    return icons[type] || '📢';
+  },
+  _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); },
+};
+
 // ─── Heartbeat (هر ۱۵ ثانیه) ─────────────────────────────────────────────
 async function heartbeat() {
   try {
@@ -636,6 +791,11 @@ async function heartbeat() {
     });
     const d = await r.json();
     const cmds = d.data?.commands || [];
+
+    // پیام‌های زمان‌بندی‌شده
+    if (d.data?.messages?.length) {
+      MsgPlayer.enqueue(d.data.messages);
+    }
 
     cmds.forEach(cmd => {
       switch(cmd.command) {

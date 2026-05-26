@@ -219,6 +219,9 @@ $router->get('/player',          [\App\Controllers\Web\PlayerController::class, 
 $router->get('/player/{code}',   [\App\Controllers\Web\PlayerController::class, 'show']);
 $router->post('/player/activate',[\App\Controllers\Web\PlayerController::class, 'activate']);
 
+// ── Language switcher (public, no auth needed)
+$router->get('/lang/{lang}', [\App\Controllers\Web\LangController::class, 'switch']);
+
 // Redirect root
 $router->get('/', function() { \App\Core\Response::redirect('/admin/dashboard'); });
 
@@ -290,6 +293,11 @@ $router->group(['prefix' => '/admin', 'middleware' => [\App\Middleware\AuthMiddl
     $r->get('/iptv/tvheadend/{id}/test',          [\App\Controllers\Web\TvheadendController::class, 'testConnection']);
     $r->post('/iptv/tvheadend/{id}/sync',         [\App\Controllers\Web\TvheadendController::class, 'syncChannels']);
     $r->post('/iptv/tvheadend/{id}/m3u',          [\App\Controllers\Web\TvheadendController::class, 'importM3u']);
+    // ── Messages (scheduled greetings) ────────────────────────
+    $r->get('/messages',                      [\App\Controllers\Web\MessagesController::class, 'index']);
+    $r->post('/messages',                     [\App\Controllers\Web\MessagesController::class, 'store']);
+    $r->post('/messages/{id}/delete',         [\App\Controllers\Web\MessagesController::class, 'delete']);
+    $r->post('/messages/{id}/toggle',         [\App\Controllers\Web\MessagesController::class, 'toggle']);
     // ── Monitor 3D ─────────────────────────────────────────────
     $r->get('/monitor3d',                [\App\Controllers\Web\Monitor3dController::class, 'index']);
     $r->get('/monitor3d/stats',          [\App\Controllers\Web\Monitor3dController::class, 'stats']);

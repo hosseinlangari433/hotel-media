@@ -84,6 +84,15 @@ class ScreenController extends Controller
             $iptvMenuId = (int)$screen['iptv_menu_id'];
         }
 
+        // پیام‌های زمان‌بندی‌شده
+        $pendingMessages = [];
+        try {
+            $pendingMessages = \App\Controllers\Web\MessagesController::getPendingForScreen(
+                $screen['id'],
+                $screen['tenant_id'] ?? 1
+            );
+        } catch (\Throwable $e) {}
+
         // تنظیمات 3D
         $cfg3d = null;
         if (($screen['screen_type'] ?? 'signage') === 'monitor_3d') {
@@ -98,12 +107,13 @@ class ScreenController extends Controller
         }
 
         Response::success([
-            'commands'      => $cmds,
-            'playlist_id'   => $playlist['id'] ?? null,
-            'screen_type'   => $screen['screen_type'] ?? 'signage',
-            'iptv_menu_id'  => $iptvMenuId,
-            'cfg_3d'        => $cfg3d,
-            'sync_interval' => 30,
+            'commands'         => $cmds,
+            'playlist_id'      => $playlist['id'] ?? null,
+            'screen_type'      => $screen['screen_type'] ?? 'signage',
+            'iptv_menu_id'     => $iptvMenuId,
+            'cfg_3d'           => $cfg3d,
+            'messages'         => $pendingMessages,
+            'sync_interval'    => 30,
         ]);
     }
 

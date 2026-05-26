@@ -48,6 +48,12 @@ function csrf_field(): string { return '<input type="hidden" name="_token" value
 function e(mixed $str): string { return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8'); }
 function asset(string $path): string { return env('APP_URL', '') . '/assets/' . ltrim($path, '/'); }
 function url(string $path): string  { return env('APP_URL', '') . '/' . ltrim($path, '/'); }
+
+// ── Multilingual helper ──────────────────────────────────
+function __(string $key, array $replace = []): string {
+    return \App\Core\Lang::get($key, $replace);
+}
+function lang(): \App\Core\Lang { return new \App\Core\Lang(); }
 function formatBytes(int $bytes, int $precision = 2): string {
     $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     for ($i = 0; $bytes >= 1024 && $i < 4; $i++) $bytes /= 1024;
@@ -136,6 +142,9 @@ if (APP_DEBUG) {
         exit;
     });
 }
+
+// ─── Language ────────────────────────────────────────────
+\App\Core\Lang::init();
 
 // ─── Bootstrap ──────────────────────────────────────────
 $router = new \App\Core\Router();
