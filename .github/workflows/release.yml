@@ -69,20 +69,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: windows-player/package.json
 
-      - name: Create placeholder icon
+      - name: Ensure assets directory exists
         shell: pwsh
         run: |
-          $dir = "windows-player\assets"
-          New-Item -ItemType Directory -Force $dir | Out-Null
-          if (-not (Test-Path "$dir\icon.ico")) {
-            $b = [byte[]](0,0,1,0,1,0,1,1,0,0,1,0,32,0,40,0,0,0,22,0,0,0,40,0,
-                          0,0,1,0,0,0,2,0,0,0,1,0,32,0,0,0,0,0,4,0,0,0,0,0,0,0,
-                          0,0,0,0,0,0,0,0,0,0,0,0,10,119,184,255,0,0,0,0)
-            [System.IO.File]::WriteAllBytes("$dir\icon.ico", $b)
-          }
-          if (-not (Test-Path "$dir\tray.png")) {
-            Copy-Item "$dir\icon.ico" "$dir\tray.png"
-          }
+          $dir = Join-Path $env:GITHUB_WORKSPACE "windows-player\assets"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Write-Host "Assets dir: $dir"
 
       - name: Set version
         shell: pwsh
