@@ -34,7 +34,7 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Build Release APK (if keystore exists)
+      - name: Build Release APK + AAB (if keystore exists)
         working-directory: android
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -44,28 +44,40 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > app/signage.keystore
+            # APK — برای دانلود مستقیم و نصب روی دستگاه‌ها
             ./gradlew assembleRelease --no-daemon \
               -Pandroid.injected.signing.store.file=$(pwd)/app/signage.keystore \
               -Pandroid.injected.signing.store.password=$STORE_PASSWORD \
               -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
               -Pandroid.injected.signing.key.password=$KEY_PASSWORD
-            echo "RELEASE_TYPE=release" >> $GITHUB_ENV
+            # AAB — برای Google Play Store
+            ./gradlew bundleRelease --no-daemon \
+              -Pandroid.injected.signing.store.file=$(pwd)/app/signage.keystore \
+              -Pandroid.injected.signing.store.password=$STORE_PASSWORD \
+              -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+              -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+            echo "SIGNED=true" >> $GITHUB_ENV
           else
-            echo "⚠ No keystore — using debug APK for release"
-            echo "RELEASE_TYPE=debug" >> $GITHUB_ENV
+            echo "⚠ No keystore — building unsigned debug APK only"
+            echo "SIGNED=false" >> $GITHUB_ENV
           fi
 
-      - name: Collect APK
+      - name: Collect APK + AAB
         run: |
           TAG=${{ github.ref_name }}
           mkdir -p dist
-          # اگه release APK وجود داشت اون رو بگیر، وگرنه debug رو
+          # APK
           if ls android/app/build/outputs/apk/release/*.apk 2>/dev/null; then
             cp android/app/build/outputs/apk/release/*.apk \
                dist/SignageCMS-${TAG}-android.apk
           else
             cp android/app/build/outputs/apk/debug/*.apk \
                dist/SignageCMS-${TAG}-android.apk
+          fi
+          # AAB (Google Play Store)
+          if ls android/app/build/outputs/bundle/release/*.aab 2>/dev/null; then
+            cp android/app/build/outputs/bundle/release/*.aab \
+               dist/SignageCMS-${TAG}-android-playstore.aab
           fi
           ls -lh dist/
 
@@ -74,6 +86,13 @@ jobs:
         with:
           name: android-apk
           path: dist/SignageCMS-*.apk
+
+      - name: Upload AAB artifact (Play Store)
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-aab
+          path: dist/SignageCMS-*-playstore.aab
+          if-no-files-found: ignore
 
   # ── ساخت Windows Player (Electron) ───────────────────────────
   windows-player:
@@ -250,7 +269,8 @@ jobs:
 
             | فایل | توضیح | سیستم‌عامل |
             |------|-------|------------|
-            | `*-android.apk` | اپلیکیشن Android / Android TV | Android 5.0+ |
+            | `*-android.apk` | اپلیکیشن Android / Android TV — نصب مستقیم | Android 5.0+ |
+            | `*-android-playstore.aab` | Android App Bundle — آپلود در Google Play Store | Google Play |
             | `*-windows-player-setup.exe` | پلیر Windows (نصب‌کننده) | Windows 10/11 |
             | `*-server.zip` | سرور SignageCMS (Docker) | Windows / Linux |
 

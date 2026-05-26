@@ -1,0 +1,1 @@
+Professional digital signage player for screens, kiosks and Android TV displays.

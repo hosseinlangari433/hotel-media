@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SignageCMS Player</string>
+    <string name="setup_title">إعداد الخادم</string>
+    <string name="server_hint">عنوان الخادم (مثال: http://192.168.1.10)</string>
+    <string name="code_hint">رمز تفعيل الشاشة</string>
+    <string name="connect">الاتصال بالخادم</string>
+    <string name="connecting">جارٍ الاتصال…</string>
+    <string name="error_invalid_url">عنوان الخادم غير صالح</string>
+    <string name="error_connection">تعذّر الوصول إلى الخادم. تحقق من العنوان والشبكة.</string>
+    <string name="error_invalid_code">رمز التفعيل غير صحيح</string>
+    <string name="status_connected">متصل</string>
+    <string name="status_offline">غير متصل — إعادة المحاولة…</string>
+</resources>

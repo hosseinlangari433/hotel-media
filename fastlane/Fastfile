@@ -1,0 +1,87 @@
+default_platform(:android)
+
+# ─────────────────────────────────────────────────────────────
+#  Android — Google Play Store
+# ─────────────────────────────────────────────────────────────
+platform :android do
+
+  # fastlane android test
+  desc "Run Android unit tests"
+  lane :test do
+    gradle(task: "test", project_dir: "android/")
+  end
+
+  # fastlane android build
+  desc "Build signed release AAB for Play Store"
+  lane :build do
+    gradle(
+      task:            "bundle",
+      build_type:      "Release",
+      project_dir:     "android/",
+      print_command:   false,
+      properties: {
+        "android.injected.signing.store.file"     => ENV["KEYSTORE_PATH"],
+        "android.injected.signing.store.password" => ENV["STORE_PASSWORD"],
+        "android.injected.signing.key.alias"      => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password"   => ENV["KEY_PASSWORD"],
+      }
+    )
+  end
+
+  # fastlane android beta
+  desc "Build + upload to Play Store Internal Testing track"
+  lane :beta do
+    build
+    upload_to_play_store(
+      track:              "internal",
+      aab:                "android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk:    true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  # fastlane android deploy
+  desc "Build + upload to Play Store Production"
+  lane :deploy do
+    build
+    upload_to_play_store(
+      track:           "production",
+      aab:             "android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      metadata_path:   "fastlane/metadata/android",
+    )
+  end
+
+  # fastlane android update_metadata
+  desc "Upload store listing text + screenshots only (no new build)"
+  lane :update_metadata do
+    upload_to_play_store(
+      track:              "production",
+      skip_upload_aab:    true,
+      skip_upload_apk:    true,
+      metadata_path:      "fastlane/metadata/android",
+    )
+  end
+
+end
+
+# ─────────────────────────────────────────────────────────────
+#  iOS — App Store Connect  (once iOS app is ready)
+# ─────────────────────────────────────────────────────────────
+# platform :ios do
+#
+#   lane :beta do
+#     build_app(scheme: "SignageCMSPlayer", project: "ios/SignageCMSPlayer.xcodeproj")
+#     upload_to_testflight
+#   end
+#
+#   lane :deploy do
+#     build_app(scheme: "SignageCMSPlayer", project: "ios/SignageCMSPlayer.xcodeproj")
+#     upload_to_app_store(
+#       metadata_path: "fastlane/metadata/ios",
+#       screenshots_path: "fastlane/screenshots/ios",
+#     )
+#   end
+#
+# end

@@ -1,0 +1,7 @@
+json_key_file("fastlane/google-play-key.json")   # Google Play service account JSON
+package_name("com.signagecms.player")
+
+# App Store Connect (iOS — future)
+# apple_id("your@email.com")
+# app_identifier("com.signagecms.player")
+# team_id("XXXXXXXXXX")

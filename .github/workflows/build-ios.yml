@@ -1,0 +1,132 @@
+name: 🍎 Build iOS App
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build iOS IPA
+    runs-on: macos-14         # Apple Silicon runner — Xcode 15+
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      # ── Debug build (every push) ────────────────────────────
+      - name: Build (simulator — no signing needed)
+        working-directory: ios/SignageCMSPlayer
+        run: |
+          xcodebuild \
+            -project SignageCMSPlayer.xcodeproj \
+            -scheme  SignageCMSPlayer \
+            -sdk     iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcpretty || true
+
+      # ── Release IPA (tags only, requires Apple Developer certs) ──
+      - name: Build Release IPA
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ios/SignageCMSPlayer
+        env:
+          APPLE_CERT_BASE64:      ${{ secrets.APPLE_CERT_BASE64 }}
+          APPLE_CERT_PASSWORD:    ${{ secrets.APPLE_CERT_PASSWORD }}
+          APPLE_PROFILE_BASE64:   ${{ secrets.APPLE_PROFILE_BASE64 }}
+          APPLE_TEAM_ID:          ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # ── Import certificate ──────────────────────────────
+          KEYCHAIN="build.keychain"
+          KEYCHAIN_PASS="tmp_$(date +%s)"
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+
+          echo "$APPLE_CERT_BASE64" | base64 -d > cert.p12
+          security import cert.p12 -k "$KEYCHAIN" -P "$APPLE_CERT_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN"
+
+          # ── Install provisioning profile ────────────────────
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$APPLE_PROFILE_BASE64" | base64 -d > profile.mobileprovision
+          PROFILE_UUID=$(security cms -D -i profile.mobileprovision | \
+            plutil -extract UUID xml1 -o - - | \
+            sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          cp profile.mobileprovision \
+            ~/Library/MobileDevice/Provisioning\ Profiles/${PROFILE_UUID}.mobileprovision
+
+          # ── Archive ─────────────────────────────────────────
+          xcodebuild archive \
+            -project SignageCMSPlayer.xcodeproj \
+            -scheme  SignageCMSPlayer \
+            -sdk     iphoneos \
+            -archivePath build/SignageCMSPlayer.xcarchive \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            | xcpretty
+
+          # ── Export IPA ──────────────────────────────────────
+          cat > ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>uploadSymbols</key><true/>
+            <key>compileBitcode</key><false/>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath build/SignageCMSPlayer.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/ipa \
+            | xcpretty
+
+      - name: Rename IPA
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${{ github.ref_name }}"
+          find ios/SignageCMSPlayer/build/ipa -name "*.ipa" \
+            -exec mv {} "SignageCMS-${TAG}-ios.ipa" \;
+
+      - name: Upload IPA artifact
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-ipa
+          path: "SignageCMS-*-ios.ipa"
+          retention-days: 90
+
+      # ── Upload to TestFlight (optional, needs App Store Connect API key) ──
+      - name: Upload to TestFlight
+        if: startsWith(github.ref, 'refs/tags/') && env.APP_STORE_CONNECT_API_KEY_BASE64 != ''
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID:     ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID:      ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 -d > AuthKey.p8
+          xcrun altool --upload-app \
+            --type ios \
+            --file "SignageCMS-${{ github.ref_name }}-ios.ipa" \
+            --apiKey  "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --privateKey AuthKey.p8

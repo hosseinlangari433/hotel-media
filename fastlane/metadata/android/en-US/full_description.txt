@@ -1,0 +1,42 @@
+SignageCMS Player turns any Android phone, tablet, set-top box or Android TV into a powerful digital signage display — managed entirely from your SignageCMS web dashboard.
+
+── WHAT IT DOES ──────────────────────────────────────
+• Connects to your SignageCMS server and plays assigned media playlists
+• Supports images, videos, web URLs and live streaming (IPTV / HLS)
+• Displays scheduled messages: welcome, congratulations, announcements
+• Runs 24/7 — auto-restarts after reboot, network drop or power failure
+• Works in kiosk / fullscreen mode with no user interaction needed
+
+── KEY FEATURES ──────────────────────────────────────
+✓ Zero-touch deployment — enter server URL + activation code once, done
+✓ Real-time updates via WebSocket — content changes appear instantly
+✓ Scheduled playlists — different content for morning, afternoon, night
+✓ Multilingual messages — supports English, Persian (فارسی) and Arabic (عربي)
+✓ Over-the-air (OTA) app updates — no manual APK install needed
+✓ Works offline — continues playing cached content when internet is down
+✓ Android TV support — navigate with remote control, shown in TV launcher
+✓ Landscape and portrait orientations
+✓ Low resource usage — runs smoothly on budget Android boxes
+
+── IDEAL FOR ─────────────────────────────────────────
+• Hotels and lobbies (welcome messages, event info)
+• Restaurants and cafes (menu boards, promotions)
+• Retail stores (product ads, pricing)
+• Corporate offices (announcements, KPIs, dashboards)
+• Airports and transit (schedules, wayfinding)
+• Hospitals and clinics (queue numbers, health tips)
+• Schools and universities (timetables, notices)
+
+── REQUIREMENTS ──────────────────────────────────────
+• Android 5.0 (Lollipop) or higher
+• A running SignageCMS server (self-hosted or cloud)
+• Active Wi-Fi or Ethernet connection
+
+── PRIVACY ───────────────────────────────────────────
+This app communicates only with the SignageCMS server you configure.
+No personal data is collected or shared with third parties.
+Full privacy policy: https://signagecms.com/privacy
+
+──────────────────────────────────────────────────────
+SignageCMS is open-source software. Source code and server installation
+instructions are available on GitHub.

@@ -7,8 +7,8 @@ android {
         applicationId   "com.signagecms.player"
         minSdk          21          // Android 5.0+ (TV سازگار)
         targetSdk       34
-        versionCode     1
-        versionName     "1.0.0"
+        versionCode     10600       // 1.6.0 → 1*10000 + 6*100 + 0
+        versionName     "1.6.0"
     }
     buildTypes {
         release {
