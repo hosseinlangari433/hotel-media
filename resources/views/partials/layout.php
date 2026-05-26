@@ -210,8 +210,11 @@ function modOn(string $id): bool {
 
   <!-- IPTV -->
   <?php if (modOn('iptv')): ?>
-  <a href="/admin/iptv" class="sidebar-link <?= isActive('/admin/iptv') && !isActive('/admin/iptv/menus') && !isActive('/admin/iptv/rooms') ? 'active' : '' ?>">
+  <a href="/admin/iptv" class="sidebar-link <?= isActive('/admin/iptv') && !isActive('/admin/iptv/menus') && !isActive('/admin/iptv/rooms') && !isActive('/admin/iptv/tvheadend') ? 'active' : '' ?>">
     <span class="icon"><i class="fas fa-satellite-dish" style="color:#f87171;"></i></span> کانال‌های IPTV
+  </a>
+  <a href="/admin/iptv/tvheadend" class="sidebar-link <?= isActive('/admin/iptv/tvheadend') ?>">
+    <span class="icon"><i class="fas fa-broadcast-tower" style="color:#f87171;"></i></span> TVHeadend
   </a>
   <a href="/admin/iptv/menus" class="sidebar-link <?= isActive('/admin/iptv/menus') ?>">
     <span class="icon"><i class="fas fa-bars" style="color:#f87171;"></i></span> منوهای IPTV
@@ -265,6 +268,9 @@ function modOn(string $id): bool {
   </a>
   <a href="/admin/settings"  class="sidebar-link <?= isActive('/admin/settings') ?>">
     <span class="icon"><i class="fas fa-gear"></i></span> تنظیمات
+  </a>
+  <a href="/admin/help"  class="sidebar-link <?= isActive('/admin/help') ?>">
+    <span class="icon"><i class="fas fa-circle-question" style="color:#818cf8;"></i></span> راهنما
   </a>
 
   <!-- فضای پایین -->

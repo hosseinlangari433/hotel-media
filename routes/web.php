@@ -283,6 +283,15 @@ $router->group(['prefix' => '/admin', 'middleware' => [\App\Middleware\AuthMiddl
     $r->get('/iptv/menus',          [\App\Controllers\Web\IptvMenuWebController::class, 'index']);
     // ── IPTV Rooms ─────────────────────────────────────────────
     $r->get('/iptv/rooms',          [\App\Controllers\Web\IptvRoomWebController::class, 'index']);
+    // ── TVHeadend Live TV ──────────────────────────────────────
+    $r->get('/iptv/tvheadend',                    [\App\Controllers\Web\TvheadendController::class, 'index']);
+    $r->post('/iptv/tvheadend',                   [\App\Controllers\Web\TvheadendController::class, 'store']);
+    $r->post('/iptv/tvheadend/{id}/delete',       [\App\Controllers\Web\TvheadendController::class, 'delete']);
+    $r->get('/iptv/tvheadend/{id}/test',          [\App\Controllers\Web\TvheadendController::class, 'testConnection']);
+    $r->post('/iptv/tvheadend/{id}/sync',         [\App\Controllers\Web\TvheadendController::class, 'syncChannels']);
+    $r->post('/iptv/tvheadend/{id}/m3u',          [\App\Controllers\Web\TvheadendController::class, 'importM3u']);
+    // ── Help ───────────────────────────────────────────────────
+    $r->get('/help',                              [\App\Controllers\Web\HelpController::class, 'index']);
     // ── In-Flight Display ──────────────────────────────────────
     $r->get('/inflight',            [\App\Controllers\Web\InflightWebController::class, 'index']);
 
