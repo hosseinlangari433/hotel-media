@@ -1,0 +1,47 @@
+{
+  "name": "signagecms-player",
+  "version": "1.5.0",
+  "description": "SignageCMS Windows Player — Digital Signage",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:ia32": "electron-builder --win --ia32",
+    "build:all": "electron-builder --win --x64 --ia32"
+  },
+  "build": {
+    "appId": "com.signagecms.player",
+    "productName": "SignageCMS Player",
+    "copyright": "SignageCMS",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "setup.html",
+      "assets/**"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "SignageCMS Player"
+    },
+    "extraMetadata": {
+      "main": "main.js"
+    }
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}

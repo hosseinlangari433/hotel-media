@@ -58,9 +58,79 @@ jobs:
           name: android-apk
           path: dist/*.apk
 
-  # ── ساخت Windows ZIP ─────────────────────────────────────────
-  windows:
-    name: Build Windows ZIP
+  # ── ساخت Windows Player (Electron) ───────────────────────────
+  windows-player:
+    name: Build Windows Player EXE
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: windows-player/package.json
+
+      - name: Create placeholder icon
+        shell: pwsh
+        run: |
+          $dir = "windows-player\assets"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          if (-not (Test-Path "$dir\icon.ico")) {
+            # 1x1 pixel ICO file (minimal valid ICO)
+            $b = [byte[]](0,0,1,0,1,0,1,1,0,0,1,0,32,0,40,0,0,0,22,0,0,0,40,0,
+                          0,0,1,0,0,0,2,0,0,0,1,0,32,0,0,0,0,0,4,0,0,0,0,0,0,0,
+                          0,0,0,0,0,0,0,0,0,0,0,0,10,119,184,255,0,0,0,0)
+            [System.IO.File]::WriteAllBytes("$dir\icon.ico", $b)
+          }
+          if (-not (Test-Path "$dir\tray.png")) {
+            Copy-Item "$dir\icon.ico" "$dir\tray.png"
+          }
+
+      - name: Set version
+        shell: pwsh
+        working-directory: windows-player
+        run: |
+          $tag = "${{ github.ref_name }}" -replace '^v', ''
+          if ($tag -match '^\d+\.\d+\.\d+$') {
+            $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+            $pkg.version = $tag
+            $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding utf8
+            Write-Host "Version → $tag"
+          }
+
+      - name: Install dependencies
+        working-directory: windows-player
+        run: npm install
+
+      - name: Build EXE
+        working-directory: windows-player
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build
+
+      - name: Rename installer
+        shell: pwsh
+        working-directory: windows-player
+        run: |
+          $tag  = "${{ github.ref_name }}"
+          $exe  = Get-ChildItem dist -Filter "*.exe" | Select-Object -First 1
+          if ($exe) {
+            $dest = "dist\SignageCMS-$tag-windows-player-setup.exe"
+            Rename-Item $exe.FullName $dest
+            Write-Host "Renamed → $dest"
+          }
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-player-exe
+          path: windows-player/dist/*.exe
+
+  # ── ساخت Windows Server ZIP ──────────────────────────────────
+  windows-server:
+    name: Build Windows Server ZIP
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,18 +153,18 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $src = Get-ChildItem "dist\SignageCMS-v*.zip" | Select-Object -First 1
-          Rename-Item $src.FullName "SignageCMS-$tag-windows.zip"
+          if ($src) { Rename-Item $src.FullName "dist\SignageCMS-$tag-server.zip" }
 
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-zip
+          name: windows-server-zip
           path: dist/*.zip
 
   # ── ساخت GitHub Release ───────────────────────────────────────
   create-release:
     name: Create GitHub Release
-    needs: [android, windows]
+    needs: [android, windows-player, windows-server]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -107,18 +177,8 @@ jobs:
         with:
           path: release-files
 
-      - name: List files
+      - name: List release files
         run: find release-files -type f -exec ls -lh {} \;
-
-      - name: Extract changelog
-        id: changelog
-        run: |
-          TAG=${{ github.ref_name }}
-          # خواندن changelog از README
-          NOTES=$(sed -n "/### ${TAG}/,/### v/p" README.md | head -20 | grep -v "^### v" || echo "SignageCMS ${TAG}")
-          echo "NOTES<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -128,27 +188,35 @@ jobs:
           body: |
             ## SignageCMS ${{ github.ref_name }}
 
-            ### دانلود
-            | فایل | توضیح |
-            |------|-------|
-            | `*-android.apk` | اپلیکیشن Android TV |
-            | `*-windows.zip` | بسته نصب Windows/Linux (Docker) |
+            ### 📥 دانلود
 
-            ### نصب
+            | فایل | توضیح | سیستم‌عامل |
+            |------|-------|------------|
+            | `*-android.apk` | اپلیکیشن Android / Android TV | Android 7+ |
+            | `*-windows-player-setup.exe` | پلیر Windows (نصب‌کننده) | Windows 10/11 |
+            | `*-server.zip` | سرور SignageCMS (Docker) | Windows / Linux |
+
+            ### 🖥️ نصب Windows Player
+            1. فایل `*-windows-player-setup.exe` را دانلود کنید
+            2. اجرا کنید — نصب خودکار است
+            3. آدرس سرور را وارد کنید و متصل شوید
+
+            ### 🐳 نصب سرور
             ```bash
-            # Windows
-            # فایل ZIP را extract کنید و setup.bat را اجرا کنید
-
             # Linux
-            unzip SignageCMS-*.zip && bash setup.sh
+            unzip SignageCMS-*-server.zip && bash setup.sh
+
+            # Windows
+            # فایل ZIP را extract و setup.bat را اجرا کنید
             ```
 
-            ### ورود پیش‌فرض
+            ### 🔑 ورود پیش‌فرض
             - URL: `http://your-server/admin`
             - Email: `admin@signagecms.com`
             - Password: `Admin@123456`
           files: |
             release-files/android-apk/*.apk
-            release-files/windows-zip/*.zip
+            release-files/windows-player-exe/*.exe
+            release-files/windows-server-zip/*.zip
           draft: false
           prerelease: false

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+<title>SignageCMS Player — راه‌اندازی</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100%; height:100%;
+  background:#0a0a14;
+  font-family:'Segoe UI', Tahoma, sans-serif;
+  color:#e2e8f0;
+  user-select:none;
+  -webkit-app-region: drag;
+}
+.wrap {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  height:100%; padding:32px 28px;
+  -webkit-app-region: no-drag;
+}
+.logo {
+  font-size:28px; font-weight:900; color:#fff;
+  letter-spacing:-1px; margin-bottom:6px;
+}
+.logo span { color:#38bdf8; }
+.sub { font-size:12px; color:#475569; margin-bottom:32px; }
+
+.field { width:100%; margin-bottom:14px; }
+label { display:block; font-size:11px; color:#64748b; margin-bottom:6px; font-weight:600; letter-spacing:.3px; }
+input {
+  width:100%;
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:13px; color:#fff;
+  font-family:inherit;
+  outline:none;
+  transition:border-color .2s;
+  direction:ltr; text-align:left;
+}
+input:focus { border-color:rgba(56,189,248,.5); background:rgba(56,189,248,.04); }
+input::placeholder { color:#334155; }
+
+.hint { font-size:10px; color:#475569; margin-top:5px; }
+
+.btn {
+  width:100%; padding:13px;
+  background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+  border:none; border-radius:10px;
+  color:#fff; font-size:14px; font-weight:700;
+  cursor:pointer; font-family:inherit;
+  margin-top:4px;
+  transition:opacity .2s, transform .1s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn:hover   { opacity:.88; }
+.btn:active  { transform:scale(.98); }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+
+.err {
+  margin-top:12px; padding:10px 14px;
+  background:rgba(239,68,68,.1);
+  border:1px solid rgba(239,68,68,.25);
+  border-radius:8px;
+  font-size:12px; color:#f87171;
+  text-align:center;
+  display:none;
+}
+.ok {
+  margin-top:12px; padding:10px 14px;
+  background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.25);
+  border-radius:8px;
+  font-size:12px; color:#4ade80;
+  text-align:center;
+  display:none;
+}
+
+.ping-row { display:flex; align-items:center; gap:8px; margin-top:6px; }
+.ping-dot { width:8px; height:8px; border-radius:50%; background:#334155; flex-shrink:0; transition:.3s; }
+.ping-dot.ok  { background:#22c55e; }
+.ping-dot.err { background:#ef4444; }
+.ping-txt { font-size:10px; color:#475569; }
+
+.version { margin-top:20px; font-size:10px; color:#1e293b; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">Signage<span>CMS</span></div>
+  <div class="sub">راه‌اندازی اولیه پلیر Windows</div>
+
+  <div class="field">
+    <label>آدرس سرور SignageCMS</label>
+    <input id="serverUrl" type="url" placeholder="http://192.168.1.100" autocomplete="off" spellcheck="false">
+    <div class="ping-row">
+      <div class="ping-dot" id="pingDot"></div>
+      <div class="ping-txt" id="pingTxt">آدرس را وارد کنید</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>کد صفحه‌نمایش <span style="color:#334155;font-weight:400;">(اختیاری)</span></label>
+    <input id="screenCode" type="text" placeholder="SCR18DBA یا کد فعال‌سازی" autocomplete="off" spellcheck="false" style="text-transform:uppercase;">
+    <div class="hint">اگر خالی باشد، صفحه pairing نمایش داده می‌شود</div>
+  </div>
+
+  <button class="btn" id="launchBtn" onclick="launch()">
+    ▶ اتصال و شروع پلیر
+  </button>
+
+  <div class="err" id="errBox"></div>
+  <div class="ok"  id="okBox">در حال اتصال...</div>
+
+  <div class="version">SignageCMS Player v1.5.0</div>
+</div>
+
+<script>
+const serverInput = document.getElementById('serverUrl');
+const codeInput   = document.getElementById('screenCode');
+const launchBtn   = document.getElementById('launchBtn');
+const errBox      = document.getElementById('errBox');
+const okBox       = document.getElementById('okBox');
+const pingDot     = document.getElementById('pingDot');
+const pingTxt     = document.getElementById('pingTxt');
+
+let pingTimer = null;
+
+// بارگذاری config ذخیره‌شده
+window.signage.getConfig().then(cfg => {
+  if (cfg.serverUrl)  serverInput.value = cfg.serverUrl;
+  if (cfg.screenCode) codeInput.value   = cfg.screenCode;
+  if (cfg.serverUrl)  schedulePing();
+});
+
+serverInput.addEventListener('input', () => {
+  clearTimeout(pingTimer);
+  pingDot.className = 'ping-dot';
+  pingTxt.textContent = 'در حال بررسی...';
+  pingTimer = setTimeout(schedulePing, 800);
+});
+
+codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') launch(); });
+serverInput.addEventListener('keydown', e => { if (e.key === 'Enter') launch(); });
+
+async function schedulePing() {
+  const url = serverInput.value.trim().replace(/\/$/, '');
+  if (!url) return;
+  const ok = await window.signage.ping(url + '/player/');
+  pingDot.className = 'ping-dot ' + (ok ? 'ok' : 'err');
+  pingTxt.textContent = ok ? 'سرور در دسترس است ✓' : 'سرور پاسخ نمی‌دهد';
+}
+
+async function launch() {
+  errBox.style.display = 'none';
+  okBox.style.display  = 'none';
+
+  const serverUrl  = serverInput.value.trim().replace(/\/$/, '');
+  const screenCode = codeInput.value.trim().toUpperCase().replace(/\s+/g, '');
+
+  if (!serverUrl) { showErr('آدرس سرور را وارد کنید'); return; }
+  if (!serverUrl.startsWith('http')) { showErr('آدرس باید با http:// یا https:// شروع شود'); return; }
+
+  launchBtn.disabled = true;
+  launchBtn.textContent = 'در حال اتصال...';
+
+  const res = await window.signage.saveAndLaunch({ serverUrl, screenCode });
+
+  if (res.ok) {
+    okBox.style.display = 'block';
+    okBox.textContent   = '✓ متصل شد — پلیر در حال بارگذاری...';
+  } else {
+    showErr(res.error || 'خطا در اتصال');
+    launchBtn.disabled   = false;
+    launchBtn.textContent = '▶ اتصال و شروع پلیر';
+  }
+}
+
+function showErr(msg) {
+  errBox.textContent     = msg;
+  errBox.style.display   = 'block';
+}
+</script>
+</body>
+</html>
