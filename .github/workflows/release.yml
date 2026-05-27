@@ -66,14 +66,13 @@ jobs:
         run: |
           TAG=${{ github.ref_name }}
           mkdir -p dist
-          # APK
+          # APK — versioned + stable name (for /releases/latest/download/)
           if ls android/app/build/outputs/apk/release/*.apk 2>/dev/null; then
-            cp android/app/build/outputs/apk/release/*.apk \
-               dist/SignageCMS-${TAG}-android.apk
+            cp android/app/build/outputs/apk/release/*.apk dist/SignageCMS-${TAG}-android.apk
           else
-            cp android/app/build/outputs/apk/debug/*.apk \
-               dist/SignageCMS-${TAG}-android.apk
+            cp android/app/build/outputs/apk/debug/*.apk   dist/SignageCMS-${TAG}-android.apk
           fi
+          cp dist/SignageCMS-${TAG}-android.apk dist/SignageCMS-android.apk
           # AAB (Google Play Store)
           if ls android/app/build/outputs/bundle/release/*.aab 2>/dev/null; then
             cp android/app/build/outputs/bundle/release/*.aab \
@@ -141,16 +140,19 @@ jobs:
           $distDir = Join-Path $env:GITHUB_WORKSPACE "windows-player\dist"
           Get-ChildItem $distDir -Recurse | ForEach-Object { Write-Host $_.FullName }
 
-      - name: Rename installer
+      - name: Rename installer (versioned + stable)
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
           $distDir = Join-Path $env:GITHUB_WORKSPACE "windows-player\dist"
           $exe = Get-ChildItem $distDir -Filter "*.exe" -Recurse | Select-Object -First 1
           if ($exe) {
-            $dest = Join-Path $distDir "SignageCMS-$tag-windows-player-setup.exe"
-            Rename-Item $exe.FullName $dest
-            Write-Host "Renamed to: $dest"
+            $versioned = Join-Path $distDir "SignageCMS-$tag-windows-player-setup.exe"
+            $stable    = Join-Path $distDir "SignageCMS-windows-player-setup.exe"
+            Rename-Item $exe.FullName $versioned
+            Copy-Item $versioned $stable
+            Write-Host "Versioned: $versioned"
+            Write-Host "Stable:    $stable"
           } else {
             Write-Error "No EXE found in $distDir"
             exit 1
@@ -186,16 +188,19 @@ jobs:
           Write-Host "=== dist contents ==="
           Get-ChildItem $outDir | ForEach-Object { Write-Host $_.FullName }
 
-      - name: Rename ZIP
+      - name: Rename ZIP (versioned + stable)
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
           $outDir = Join-Path $env:GITHUB_WORKSPACE "dist"
           $src = Get-ChildItem $outDir -Filter "SignageCMS-v*.zip" | Select-Object -First 1
           if ($src) {
-            $dest = Join-Path $outDir "SignageCMS-$tag-server.zip"
-            Rename-Item $src.FullName $dest
-            Write-Host "Renamed to: $dest"
+            $versioned = Join-Path $outDir "SignageCMS-$tag-server.zip"
+            $stable    = Join-Path $outDir "SignageCMS-server.zip"
+            Rename-Item $src.FullName $versioned
+            Copy-Item $versioned $stable
+            Write-Host "Versioned: $versioned"
+            Write-Host "Stable:    $stable"
           } else {
             Write-Error "No server ZIP found in $outDir"
             Get-ChildItem $outDir | ForEach-Object { Write-Host $_.FullName }
