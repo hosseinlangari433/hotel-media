@@ -29,11 +29,12 @@
 |--------|------|-------|
 | 🤖 **Android / Android TV** | [⬇️ دانلود APK](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-android.apk) | Android 5.0+ — نصب مستقیم |
 | 🖥️ **Windows Player** | [⬇️ دانلود EXE](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-windows-player-setup.exe) | Windows 10/11 — نصب‌کننده خودکار |
-| 🐳 **Server (Docker)** | [⬇️ دانلود ZIP](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-server.zip) | همه سیستم‌عامل‌ها |
+| 🟦 **Server (Windows Installer)** | [⬇️ دانلود Setup EXE](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-server-setup.exe) | Windows 10/11 / Server — نصب‌کننده Inno Setup |
+| 🐳 **Server (Docker ZIP)** | [⬇️ دانلود ZIP](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-server.zip) | همه سیستم‌عامل‌ها |
 
 > 📦 **همه نسخه‌ها و تاریخچه:** [github.com/kish210/hotel-media/releases](https://github.com/kish210/hotel-media/releases)
 >
-> ✅ **آخرین نسخه:** v1.6.0 — Android APK + Windows Player EXE + Server ZIP
+> ✅ **آخرین نسخه:** v1.6.2 — Android APK + Windows Player EXE + **Server Setup EXE (Inno Setup)** + Server ZIP
 
 ---
 
