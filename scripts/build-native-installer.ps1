@@ -25,9 +25,11 @@
 param(
     [string]$Version    = "1.6.2",
 
-    # Bundled runtime versions. Override if you want newer builds; the URLs are
-    # derived from these. PHP must be the x64 *NTS* (non-thread-safe) Windows zip.
-    [string]$PhpZipUrl    = "https://windows.php.net/downloads/releases/php-8.3.14-nts-Win32-vs16-x64.zip",
+    # Bundled runtime versions. Leave $PhpZipUrl empty to auto-try a list of
+    # recent PHP 8.3 NTS builds across both the live and archive folders (robust
+    # in CI, where a specific patch may have been moved to /archives/). PHP must
+    # be the x64 *NTS* (non-thread-safe) Windows zip.
+    [string]$PhpZipUrl    = "",
     [string]$MariaDbZipUrl= "https://archive.mariadb.org/mariadb-11.4.4/winx64-packages/mariadb-11.4.4-winx64.zip",
     [string]$NssmZipUrl   = "https://nssm.cc/release/nssm-2.24.zip",
 
@@ -78,13 +80,35 @@ Ok "Using ISCC: $Iscc"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 function Get-Cached {
-    param([string]$Url, [string]$Name)
+    # Tries each candidate URL in turn; first that downloads wins.
+    param([string[]]$Urls, [string]$Name)
     $dest = Join-Path $DownloadDir $Name
     if (Test-Path $dest) { Info "cached: $Name"; return $dest }
-    Info "downloading $Name ..."
-    Invoke-WebRequest -Uri $Url -OutFile $dest -UseBasicParsing
-    Ok "downloaded $Name ($([math]::Round((Get-Item $dest).Length/1MB,1)) MB)"
-    return $dest
+    foreach ($u in $Urls) {
+        try {
+            Info "downloading $Name from $u"
+            Invoke-WebRequest -Uri $u -OutFile $dest -UseBasicParsing
+            Ok "downloaded $Name ($([math]::Round((Get-Item $dest).Length/1MB,1)) MB)"
+            return $dest
+        } catch {
+            Write-Host "      (not available: $u)" -ForegroundColor DarkYellow
+            if (Test-Path $dest) { Remove-Item $dest -Force }
+        }
+    }
+    throw "Could not download $Name from any of: `n   $($Urls -join "`n   ")"
+}
+
+function Get-PhpUrls {
+    # Build a candidate list of PHP 8.3 NTS x64 zips. windows.php.net keeps the
+    # newest few in /releases/ and moves older ones to /releases/archives/.
+    param([string]$Override)
+    if ($Override) { return @($Override) }
+    $base = 'https://windows.php.net/downloads/releases'
+    $patches = 18,17,16,15,14,13,12,11,10   # try newest-first across 8.3.x
+    $urls = @()
+    foreach ($p in $patches) { $urls += "$base/php-8.3.$p-nts-Win32-vs16-x64.zip" }
+    foreach ($p in $patches) { $urls += "$base/archives/php-8.3.$p-nts-Win32-vs16-x64.zip" }
+    return $urls
 }
 function Expand-Fresh {
     param([string]$Zip, [string]$Dest)
@@ -97,9 +121,9 @@ function Expand-Fresh {
 # 1. Download runtimes
 # ══════════════════════════════════════════════════════════════════════════════
 Hd "Downloading runtimes (cached after first run)"
-$phpZip   = Get-Cached $PhpZipUrl     "php.zip"
-$mariaZip = Get-Cached $MariaDbZipUrl "mariadb.zip"
-$nssmZip  = Get-Cached $NssmZipUrl    "nssm.zip"
+$phpZip   = Get-Cached (Get-PhpUrls $PhpZipUrl) "php.zip"
+$mariaZip = Get-Cached @($MariaDbZipUrl)        "mariadb.zip"
+$nssmZip  = Get-Cached @($NssmZipUrl)           "nssm.zip"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 2. Assemble the app payload (repo minus dev/heavy files)
