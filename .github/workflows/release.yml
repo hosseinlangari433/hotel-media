@@ -297,15 +297,24 @@ jobs:
           $v = "${{ github.ref_name }}" -replace '^v', ''
           echo "VERSION=$v" >> $env:GITHUB_OUTPUT
 
-      - name: Install Inno Setup
+      - name: Install Inno Setup + NSSM
         shell: pwsh
-        run: choco install innosetup -y --no-progress
+        run: |
+          choco install innosetup -y --no-progress
+          choco install nssm -y --no-progress
 
       - name: Build all-in-one installer (bundles PHP + MariaDB + NSSM)
         shell: pwsh
         run: |
           $ver = "${{ steps.ver.outputs.VERSION }}"
-          .\scripts\build-native-installer.ps1 -Version $ver
+          # Locate the real 64-bit nssm.exe that choco unpacked (not the shim).
+          $nssm = Get-ChildItem "$env:ChocolateyInstall\lib\nssm" -Filter nssm.exe -Recurse -ErrorAction SilentlyContinue |
+                    Where-Object { $_.DirectoryName -match 'win64' } | Select-Object -First 1
+          if (-not $nssm) {
+            $nssm = Get-ChildItem "$env:ChocolateyInstall\lib\nssm" -Filter nssm.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if ($nssm) { Write-Host "Using NSSM: $($nssm.FullName)" }
+          .\scripts\build-native-installer.ps1 -Version $ver -NssmExePath $(if ($nssm) { $nssm.FullName } else { "" })
 
       - name: Rename installer (versioned + stable)
         shell: pwsh

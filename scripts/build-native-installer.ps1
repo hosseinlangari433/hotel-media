@@ -33,6 +33,10 @@ param(
     [string]$MariaDbZipUrl= "https://archive.mariadb.org/mariadb-11.4.4/winx64-packages/mariadb-11.4.4-winx64.zip",
     [string]$NssmZipUrl   = "https://nssm.cc/release/nssm-2.24.zip",
 
+    # nssm.cc is often unreachable. If you already have nssm.exe (e.g. via
+    # `choco install nssm`), pass its full path here to skip the download.
+    [string]$NssmExePath = "",
+
     [string]$Iscc        = $null   # path to ISCC.exe; auto-detected if omitted
 )
 
@@ -123,7 +127,8 @@ function Expand-Fresh {
 Hd "Downloading runtimes (cached after first run)"
 $phpZip   = Get-Cached (Get-PhpUrls $PhpZipUrl) "php.zip"
 $mariaZip = Get-Cached @($MariaDbZipUrl)        "mariadb.zip"
-$nssmZip  = Get-Cached @($NssmZipUrl)           "nssm.zip"
+$nssmZip  = if ($NssmExePath -and (Test-Path $NssmExePath)) { $null }
+            else { Get-Cached @($NssmZipUrl) "nssm.zip" }
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 2. Assemble the app payload (repo minus dev/heavy files)
@@ -196,15 +201,21 @@ foreach ($junk in @('share\doc','share\man','mysql-test','sql-bench')) {
 }
 Ok "MariaDB unpacked"
 
-# NSSM — keep only the 64-bit exe.
-$tmpNssm = Join-Path $StageDir 'nssm'
-Expand-Fresh $nssmZip $tmpNssm
-$nssm64 = Get-ChildItem $tmpNssm -Filter 'nssm.exe' -Recurse |
-            Where-Object { $_.DirectoryName -match 'win64' } | Select-Object -First 1
-if (-not $nssm64) { $nssm64 = Get-ChildItem $tmpNssm -Filter 'nssm.exe' -Recurse | Select-Object -First 1 }
+# NSSM — keep only the 64-bit exe. Prefer a pre-supplied exe (e.g. choco) and
+# fall back to the downloaded zip.
 New-Item -ItemType Directory -Path $RtNssm -Force | Out-Null
-Copy-Item $nssm64.FullName (Join-Path $RtNssm 'nssm.exe')
-Ok "NSSM unpacked"
+if ($NssmExePath -and (Test-Path $NssmExePath)) {
+    Copy-Item $NssmExePath (Join-Path $RtNssm 'nssm.exe') -Force
+    Ok "NSSM taken from $NssmExePath"
+} else {
+    $tmpNssm = Join-Path $StageDir 'nssm'
+    Expand-Fresh $nssmZip $tmpNssm
+    $nssm64 = Get-ChildItem $tmpNssm -Filter 'nssm.exe' -Recurse |
+                Where-Object { $_.DirectoryName -match 'win64' } | Select-Object -First 1
+    if (-not $nssm64) { $nssm64 = Get-ChildItem $tmpNssm -Filter 'nssm.exe' -Recurse | Select-Object -First 1 }
+    Copy-Item $nssm64.FullName (Join-Path $RtNssm 'nssm.exe')
+    Ok "NSSM unpacked"
+}
 
 # Runtime scripts (provision / uninstall / manage / my.ini.template).
 New-Item -ItemType Directory -Path $RtScr -Force | Out-Null
