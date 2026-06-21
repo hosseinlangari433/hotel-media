@@ -27,9 +27,10 @@
 
 | پلتفرم | فایل | توضیح |
 |--------|------|-------|
+| ⭐ **Server (All-in-One — بدون Docker)** | [⬇️ دانلود Setup EXE](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-setup.exe) | Windows 10/11 / Server — فقط دابل‌کلیک، بدون نیاز به Docker یا دانش فنی |
 | 🤖 **Android / Android TV** | [⬇️ دانلود APK](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-android.apk) | Android 5.0+ — نصب مستقیم |
 | 🖥️ **Windows Player** | [⬇️ دانلود EXE](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-windows-player-setup.exe) | Windows 10/11 — نصب‌کننده خودکار |
-| 🟦 **Server (Windows Installer)** | [⬇️ دانلود Setup EXE](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-server-setup.exe) | Windows 10/11 / Server — نصب‌کننده Inno Setup |
+| 🟦 **Server (Docker Installer)** | [⬇️ دانلود Setup EXE](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-server-setup.exe) | Windows 10/11 / Server — نصب‌کننده Docker/WSL2 (Inno Setup) |
 | 🐳 **Server (Docker ZIP)** | [⬇️ دانلود ZIP](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-server.zip) | همه سیستم‌عامل‌ها |
 
 > 📦 **همه نسخه‌ها و تاریخچه:** [github.com/kish210/hotel-media/releases](https://github.com/kish210/hotel-media/releases)
@@ -61,7 +62,31 @@
 
 ---
 
-## ⚡ نصب یکپارچه (پیشنهادی) — یک فایل، همه سیستم‌عامل‌ها
+## ⭐ نصب بدون Docker (ساده‌ترین راه برای کاربر غیرفنی)
+
+اگر نمی‌خواهید با Docker درگیر شوید، **دو راه بدون Docker** دارید — هیچ‌کدام به Docker، WSL2 یا تنظیم دستی دیتابیس نیاز ندارند:
+
+| روش | چه‌کاری بکنید | مناسب چه‌کسی |
+|-----|--------------|--------------|
+| 🟢 **نصب‌کننده All-in-One** | فایل [`SignageCMS-setup.exe`](https://github.com/kish210/hotel-media/releases/latest/download/SignageCMS-setup.exe) را دانلود و دابل‌کلیک کنید | کاربر نهایی بدون دانش فنی — همه‌چیز داخل فایل هست |
+| 🟢 **اجرا روی همین پوشه** | فایل سرور را extract کنید و روی **`SETUP-NO-DOCKER.bat`** دابل‌کلیک کنید | وقتی فایل‌های سرور را دارید و می‌خواهید همین‌جا نصب شود |
+
+> ⚠️ **نکته مهم:** فایل‌های `START.bat`، `INSTALL.bat`، `setup-windows.ps1` و `install.ps1` **روش Docker** هستند — اگر Docker نصب نباشد خطا می‌دهند. برای نصب بدون Docker از `SignageCMS-setup.exe` یا `SETUP-NO-DOCKER.bat` استفاده کنید.
+
+`SETUP-NO-DOCKER.bat` به‌صورت خودکار یک PHP + MariaDB قابل‌حمل را دانلود می‌کند، دیتابیس را می‌سازد و وب‌سرور + وب‌سوکت + دیتابیس را به‌عنوان **سرویس ویندوز** (با اجرای خودکار هنگام بوت) نصب می‌کند. بعد از نصب، داشبورد روی `http://localhost/admin` باز می‌شود.
+
+```powershell
+# یا از PowerShell (Run as Administrator):
+.\setup-native.ps1            # نصب
+.\setup-native.ps1 -Port 8080 # نصب روی پورت دلخواه
+.\setup-native.ps1 -Uninstall # حذف سرویس‌ها
+```
+
+جزئیات بیشتر: [installer/native/README.md](installer/native/README.md)
+
+---
+
+## ⚡ نصب یکپارچه با Docker — یک فایل، همه سیستم‌عامل‌ها
 
 یک نصب‌کننده هوشمند که **سیستم‌عامل شما را خودش تشخیص می‌دهد**، همه پیش‌نیازها (Docker / WSL2) را **دانلود، نصب و بررسی** می‌کند و سپس استک کامل را بالا می‌آورد. نیازی به انتخاب دستی اسکریپت نیست.
 
