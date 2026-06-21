@@ -19,3 +19,7 @@ push-to-github.ps1
 # Native installer build artifacts (PHP/MariaDB/NSSM are downloaded at build time)
 dist/
 installer/native/Output/
+installer/hotelmedia/Output/
+# Generated at build time (compiled tray + icon)
+installer/hotelmedia/tray/HotelMediaTray.exe
+installer/hotelmedia/**/hotelmedia.ico

@@ -1,0 +1,24 @@
+# HotelMedia — MariaDB configuration (native / no-Docker).
+# Placeholders {{BASEDIR}} / {{DATADIR}} / {{PORT}} are filled by provision-hm.ps1.
+
+[mysqld]
+basedir            = {{BASEDIR}}
+datadir            = {{DATADIR}}
+port               = {{PORT}}
+bind-address       = 127.0.0.1
+socket             = HotelMedia-MySQL
+
+character-set-server   = utf8mb4
+collation-server       = utf8mb4_unicode_ci
+default-storage-engine = InnoDB
+lower_case_table_names = 1
+
+max_allowed_packet      = 256M
+innodb_buffer_pool_size = 256M
+sql_mode                = ""
+max_connections         = 100
+table_open_cache        = 400
+
+[client]
+port   = {{PORT}}
+socket = HotelMedia-MySQL
