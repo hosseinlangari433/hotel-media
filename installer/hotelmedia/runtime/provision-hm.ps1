@@ -212,10 +212,10 @@ if ($LASTEXITCODE -ne 0) { FAIL "Schema import failed" }
 OK "Schema imported, admin account ready"
 
 # ── 7. web + websocket services ───────────────────────────────────────────────
-function Register-NssmService { param([string]$Name,[string]$Exe,[string]$Args,[string]$Desc,[string]$Out,[string]$Err)
+function Register-NssmService { param([string]$Name,[string]$Exe,[string]$CmdArgs,[string]$Desc,[string]$Out,[string]$Err)
     Remove-ServiceIfExists $Name
     & $NssmExe install $Name $Exe 2>&1 | Add-Content $LogFile
-    & $NssmExe set $Name AppParameters  $Args | Out-Null
+    & $NssmExe set $Name AppParameters  $CmdArgs | Out-Null
     & $NssmExe set $Name AppDirectory   $App  | Out-Null
     & $NssmExe set $Name DisplayName    "HotelMedia - $Name" | Out-Null
     & $NssmExe set $Name Description     $Desc | Out-Null
@@ -228,13 +228,13 @@ function Register-NssmService { param([string]$Name,[string]$Exe,[string]$Args,[
     Start-Service $Name
 }
 Register-NssmService -Name $SVC_WEB -Exe $PhpExe `
-    -Args "-c `"$PhpIni`" -S 0.0.0.0:$Port -t `"$App\public`" `"$App\public\server-router.php`"" `
+    -CmdArgs "-c `"$PhpIni`" -S 0.0.0.0:$Port -t `"$App\public`" `"$App\public\server-router.php`"" `
     -Desc "HotelMedia web panel / API" `
     -Out (Join-Path $LogDir 'web.log') -Err (Join-Path $LogDir 'web.err.log')
 OK "Web service running on port $Port"
 
 Register-NssmService -Name $SVC_WS -Exe $PhpExe `
-    -Args "-c `"$PhpIni`" `"$App\websocket\server.php`"" `
+    -CmdArgs "-c `"$PhpIni`" `"$App\websocket\server.php`"" `
     -Desc "HotelMedia realtime server" `
     -Out (Join-Path $LogDir 'ws.log') -Err (Join-Path $LogDir 'ws.err.log')
 & $NssmExe set $SVC_WS AppEnvironmentExtra "WS_PORT=$WsPort" | Out-Null

@@ -222,8 +222,9 @@ $router->post('/player/activate',[\App\Controllers\Web\PlayerController::class, 
 // ── Language switcher (public, no auth needed)
 $router->get('/lang/{lang}', [\App\Controllers\Web\LangController::class, 'switch']);
 
-// Redirect root
+// Redirect root and /admin to dashboard
 $router->get('/', function() { \App\Core\Response::redirect('/admin/dashboard'); });
+$router->get('/admin', function() { \App\Core\Response::redirect('/admin/dashboard'); });
 
 // ── Module management routes
 $router->group(['prefix' => '/admin', 'middleware' => [\App\Middleware\AuthMiddleware::class]], function($r) {

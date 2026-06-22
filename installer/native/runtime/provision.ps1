@@ -248,11 +248,11 @@ OK "Schema imported and admin account created"
 $PhpIni = Join-Path $PhpDir 'php.ini'
 
 function Register-NssmService {
-    param([string]$Name, [string]$Exe, [string]$Args, [string]$Desc, [string]$Out, [string]$Err)
+    param([string]$Name, [string]$Exe, [string]$CmdArgs, [string]$Desc, [string]$Out, [string]$Err)
     Remove-ServiceIfExists $Name
     INFO "Registering service: $Name"
     & $NssmExe install $Name $Exe 2>&1 | Add-Content $LogFile
-    & $NssmExe set $Name AppParameters       $Args            | Out-Null
+    & $NssmExe set $Name AppParameters       $CmdArgs         | Out-Null
     & $NssmExe set $Name AppDirectory         $App             | Out-Null
     & $NssmExe set $Name DisplayName          "SignageCMS - $Name" | Out-Null
     & $NssmExe set $Name Description           $Desc            | Out-Null
@@ -268,13 +268,13 @@ function Register-NssmService {
 
 # Web server (PHP built-in server with the front-controller router).
 Register-NssmService -Name $SVC_WEB -Exe $PhpExe `
-    -Args "-c `"$PhpIni`" -S 0.0.0.0:$Port -t `"$App\public`" `"$App\public\server-router.php`"" `
+    -CmdArgs "-c `"$PhpIni`" -S 0.0.0.0:$Port -t `"$App\public`" `"$App\public\server-router.php`"" `
     -Desc "SignageCMS web dashboard / API (PHP built-in server)" `
     -Out (Join-Path $LogDir 'web.log') -Err (Join-Path $LogDir 'web.err.log')
 
 # WebSocket server (pure-PHP streams).
 Register-NssmService -Name $SVC_WS -Exe $PhpExe `
-    -Args "-c `"$PhpIni`" `"$App\websocket\server.php`"" `
+    -CmdArgs "-c `"$PhpIni`" `"$App\websocket\server.php`"" `
     -Desc "SignageCMS realtime WebSocket server" `
     -Out (Join-Path $LogDir 'ws.log') -Err (Join-Path $LogDir 'ws.err.log')
 
